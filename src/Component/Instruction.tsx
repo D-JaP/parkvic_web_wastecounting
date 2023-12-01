@@ -8,7 +8,7 @@ function Instruction() {
             <h2>How to get Litter Insights:</h2>
             <div className='step d-flex flex-row align-items-center'>
                 <p className='number'>1</p>
-                <p className='doc'>Select images in JPG or PNG format (<strong>maximum 50</strong>). Test <span><a href="https://parkvic-app.s3.ap-southeast-2.amazonaws.com/test_image.jpg" download="test_image">Image</a></span></p>
+                <p className='doc'>Select images in JPG or PNG format (<strong>maximum 40</strong>). Test <span><a href="https://parkvic-app.s3.ap-southeast-2.amazonaws.com/test_image.jpg" download="test_image">Image</a></span></p>
             </div>
             <div className='step d-flex flex-row align-items-center'>
                 <p className='number'>2</p>

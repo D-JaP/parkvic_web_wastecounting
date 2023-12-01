@@ -109,9 +109,8 @@ function MainSection() {
   const [analyzedData, setanalyzedData] = useState<ApiData>([]);
 
   const handleAnalyzeButtonClick = async () => {
-    const imageBodyRequest = await FileList2JsonArray(inputImages);
     setisAnalyzing(true);
-    
+    const imageBodyRequest = await FileList2JsonArray(inputImages);
     abortController.current = new AbortController()
 
     fetch(apiUrl, {
