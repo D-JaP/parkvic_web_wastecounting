@@ -1,0 +1,94 @@
+$main-color : #284E36;
+$btn-color : #0089C4;
+$work-color : #DCF2E6;
+$work-height : 500px;
+$grey-color : rgba(0,0,0,0.45);
+$grey-color-text : var(--global-text-color);
+$content-text-family: "source-sans-pro", sans-serif;
+.Main {
+    background-color: #284E36;
+    height: max-content;
+    width: 100vw;
+
+    .work-section {
+        position: relative;
+        top: 30px;
+        min-height: $work-height;
+        height: 1px;
+        
+        width: 100%;
+        background-color: $work-color;
+        border-radius: 21px;
+        .name {
+            .button {
+                width: fit-content;
+                height: fit-content;
+                padding: 5px 15px;
+                border-radius: 20px;
+                background-color: $btn-color;
+                color: white;
+                margin-left: auto;
+                margin-right: auto;
+                &:hover {
+                    cursor: pointer;
+                }
+            }
+            .reset_icon{
+                &:hover{
+                    cursor: pointer;
+                }
+            }
+            
+        }
+        .main-text {
+            color: $main-color;
+            font-family: $content-text-family;
+            font-size: 36px;
+            font-weight: bold; 
+            
+        }
+        .space-line {
+            height: 1px;
+            width: 100%;
+            background-color: grey;
+            opacity: 0.5;
+        }
+        .dropdown-list{
+            &:last-child{
+                padding-bottom  : 50px;
+            }
+        }
+    }
+    .img-upload-section {
+        height: 65%;
+        margin-top: 20px;
+        border: 3px dashed $grey-color;
+        width: 88%;
+        margin-left: auto;
+        margin-right: auto;
+        font-family: $content-text-family;
+        font-size: 18px;
+        font-weight: 500;
+        font-style: normal;
+        color: $grey-color-text;
+        .input {
+            width: 80%;
+            height: 100%;
+            position: absolute;
+            overflow: hidden;
+            display: none;
+        }
+        .button {
+            width: max-content;
+            padding: 8px 100px;
+            border-radius: 20px;
+            background-color: $btn-color;
+            color: white;
+            margin-left: auto;
+            margin-right: auto;
+            &:hover {
+                cursor: pointer;
+            }
+        }
+    }
+}

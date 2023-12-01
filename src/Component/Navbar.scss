@@ -1,0 +1,17 @@
+$font-size : 20px;
+$text-color : #284E36;
+$font-stack: 'Outfit', sans-serif;
+
+.navbar {
+    margin: 20px 0px;
+
+    .tab {
+        .text-header {
+            text-decoration: none;
+            font-size: $font-size;
+            font-family: $font-stack;
+            color: $text-color;
+            margin-right: 30px;
+        }
+    }
+}

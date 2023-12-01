@@ -1,0 +1,32 @@
+.overlay {
+    background-color: rgba(0,0,0,0.7);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    opacity: 0;
+    transition: opacity 0.2s ease-out;
+    &.appear{
+        opacity: 1;
+    }
+    .image {
+        height: 60vh;
+        position: relative;
+        top: 20vh;
+        opacity: 0;
+        transition: opacity 0.3s ease-in;
+        &.appear {
+            opacity: 1;
+        }
+    }
+    .close {
+        position: absolute;
+        top: 20vh;
+        transform: translateX(-100%);
+        width: 30px;
+        height: 30px;
+        fill: white;
+        background-color: rgba(255,255,255,0.2);
+    }
+}

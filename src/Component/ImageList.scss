@@ -1,0 +1,31 @@
+.img-list {
+    // border: 2px solid var(--global-text-color);
+    box-sizing: border-box;
+    border-radius: 5px;
+    flex-direction: row;
+    flex-wrap:wrap;
+    width: fit-content;
+    margin: 10px;
+    justify-content: center;
+    width: 40%;
+    .img-output {
+        margin: 10px;
+        flex-basis: 22%;
+        p{
+            margin-top: 0!important;
+            font-family: var(--global-text-font);
+            color: var(--global-text-color);
+            font-size: 12px;
+            margin: 5px;
+            font-weight: 600;
+        }
+
+        img{
+            width: 100px;
+            height: 90px;
+            &:hover {
+                cursor: zoom-in;
+            }
+        }
+    }
+}
