@@ -1,10 +1,12 @@
-import React, { MutableRefObject, useEffect, useRef, useState } from "react";
+import React, { MutableRefObject, ReactNode, useEffect, useRef, useState } from "react";
 import "./MainSection.scss";
 import SelectedImageDropDown from "./SelectedImageDropDown";
 import { ApiData } from "./typed.ts";
 import LoadingEffect from "./LoadingEffect.tsx";
 import Summary from "./Summary.tsx";
 import * as XLSX from "xlsx";
+import ErrMsgBox from "./ErrMsgBox.tsx";
+import s3Upload from "./s3UpLoad.tsx";
 
 function MainSection() {
   const icon: string = `${process.env.PUBLIC_URL}/img/eye.png`;
@@ -22,8 +24,11 @@ function MainSection() {
   const [inputImages, setinputImages] = useState<File[]>([]);
 
   const abortController = useRef<AbortController>(new AbortController())
+  const [errMsg, seterrMsg] = useState("")
+
 
   useEffect(() => {
+    
     if (inputImages != null && inputImages.length > 0) {
       setisSelectedImages(true);
     } else {
@@ -45,6 +50,8 @@ function MainSection() {
     if (isAnalyzing){
       abortController.current.abort();
     }
+    fileInputRef.current.value=''
+    setprocessingMsg("")
     setinputImages([]);
     setisSelectedImages(false);
     setisAnalyzed(false);
@@ -70,23 +77,20 @@ function MainSection() {
   }, [isSelectedImages]);
   //   analyzed state
   // helper function
-  type ImageJSON = {
-    filename: string;
-    content: string;
-  };
+
   type ImagesJsonArray = {
-    images: ImageJSON[];
+    images: string[];
   };
   const [isAnalyzed, setisAnalyzed] = useState(false);
   const [isAnalyzing, setisAnalyzing] = useState(false);
   const apiUrl =
     "https://cbczp2vxvdpf3umb5tybcjdehi0gicgs.lambda-url.ap-southeast-2.on.aws/";
-  const FileList2JsonArray = async (filelist: File[]) => {
+  const FileList2JsonArray = (imageUrlList: string[]) => {
     let outputArray: ImagesJsonArray = { images: [] };
-    for (const file of filelist) {
+    for (const url of imageUrlList) {
       outputArray["images"] = [
         ...outputArray["images"],
-        { filename: file.name, content: await readIImageAsBase64(file) },
+        url
       ];
     }
     return outputArray;
@@ -107,13 +111,18 @@ function MainSection() {
   };
 
   const [analyzedData, setanalyzedData] = useState<ApiData>([]);
-
+  const [processingMsg, setprocessingMsg] = useState('')
   const handleAnalyzeButtonClick = async () => {
     setisAnalyzing(true);
-    const imageBodyRequest = await FileList2JsonArray(inputImages);
+    
     abortController.current = new AbortController()
-
-    fetch(apiUrl, {
+    // upload file to S3
+    setprocessingMsg("Uploading images")
+    const imageUrlLists = await s3Upload(inputImages)
+    const imageBodyRequest = FileList2JsonArray(imageUrlLists);
+    // 
+    setprocessingMsg("Analyzing data")
+    await fetch(apiUrl, {
       signal: abortController.current.signal,
       method: "POST",
       headers: {
@@ -134,12 +143,16 @@ function MainSection() {
       .then((data) => {
         setanalyzedData(data.data);
         setisAnalyzed(true);
+        setprocessingMsg("Finished")
       })
       .catch((error) => {
-        console.error("An error occurred:", error);
+        console.error("An error occurred:", error.message);
+        setErrMsgBox(error.message)
+        setisAnalyzing(false);
+        handleResetClick();
       });
+      
   };
-
 
   //  iamge delete handle
   const handleDeleteSelectedImage = (index: number) => {
@@ -165,10 +178,15 @@ function MainSection() {
     setcountData(count);
   };
 
-  // abort if reset
-  
-
-  
+  // Error message
+  const [msgBoxElement, setmsgBoxElement] = useState<React.ReactElement|null>(null)
+  const setErrMsgBox = (message:string) => {
+    setmsgBoxElement(<ErrMsgBox message={message} kill={killMsgBox} />)
+  }
+  const killMsgBox = () => {
+    setmsgBoxElement(null)
+  }
+    
   
   // return statement
   return (
@@ -177,6 +195,7 @@ function MainSection() {
         className="work-section container-md"
         style={{ height: expandableHeight }}
       >
+        
         {/* task icon and task bar */}
         <div
           className={`name d-flex ${
@@ -185,6 +204,8 @@ function MainSection() {
               : "justify-content-center"
           }`}
         >
+                {(msgBoxElement!= null) && msgBoxElement}
+
           <div className="d-flex">
             <img
               src={icon}
@@ -199,6 +220,7 @@ function MainSection() {
 
           {isSelectedImages && (
             <div className="d-flex align-items-center">
+              <div className="me-3">{processingMsg}</div> 
               <img
                 src={reset_icon}
                 alt="reset_icon"
@@ -238,7 +260,7 @@ function MainSection() {
               className="ms-auto me-auto"
               style={{ width: "72px", height: "56px" }}
             ></img>
-            <p className="text-global mt-3 mb-2">
+            <p className="text-global mt-4 mb-2">
               Select images to break down litter count
             </p>
             <div className="button" onClick={handleSelectImg}>
@@ -252,6 +274,7 @@ function MainSection() {
               ref={fileInputRef}
               onChange={handleInputChange}
             />
+            <p className="size-warning">Maximum image size 6MB</p>
           </div>
         }
         {/* add list drop down */}

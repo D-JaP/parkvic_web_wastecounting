@@ -1,0 +1,32 @@
+.MessageBox{ 
+    padding: 5px 20px;
+    background-color: #860000;
+    color: white;
+    min-width: 30vw;
+    max-width: 60vw;
+    position: fixed;
+    top: 40vh;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: 20px;
+    font-family: var(--global-text-font);
+    opacity: 1;
+    border-radius: 20px;
+    z-index: 1000;
+    align-items: center;
+    p {
+        margin-bottom: 0;
+    }
+    .close_icon {
+        margin-left: auto;
+        width: 30px;
+        height: 30px;
+        fill: white;
+    }
+    
+    &.hide {
+        transition: opacity 0.3s ease-in;
+        opacity: 0;
+    }
+}
+
