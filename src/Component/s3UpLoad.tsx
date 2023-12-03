@@ -1,6 +1,5 @@
 import { PutObjectCommand, S3Client, PutObjectCommandOutput } from "@aws-sdk/client-s3";
 import {v4 as uuidv4} from 'uuid';
-import url from 'url'
 const bucketName ='parkvic-app'
 const region  = "ap-southeast-2"
 const keyPrefix = "parkvic/lambda/"
@@ -16,12 +15,11 @@ const s3client = new S3Client({
 export default async function s3Upload(files: File[]) {
     
     const keyPostfix = uuidv4()
-    const temp_url = url.resolve(keyPrefix, keyPostfix) + "/"
-
+    const temp_url = keyPrefix+ keyPostfix + '/'
+    
     let imageList : string[] = []
     for(const file of files){
-        const key = url.resolve(temp_url,file.name)
-        
+        const key = temp_url + file.name
         const command  = new PutObjectCommand({
             Bucket: bucketName,
             Key: key,
@@ -44,7 +42,7 @@ export default async function s3Upload(files: File[]) {
         })
         
 
-        imageList = [...imageList, url.resolve(path_prefix, key)]
+        imageList = [...imageList, path_prefix + key]
         try {
             const response =  await s3client.send(command)
         }
