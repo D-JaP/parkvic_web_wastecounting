@@ -1,4 +1,10 @@
-import React, { MutableRefObject, ReactNode, useEffect, useRef, useState } from "react";
+import React, {
+  MutableRefObject,
+  ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import "./MainSection.scss";
 import SelectedImageDropDown from "./SelectedImageDropDown";
 import { ApiData } from "./typed.ts";
@@ -23,12 +29,10 @@ function MainSection() {
   const [isSelectedImages, setisSelectedImages] = useState<boolean>(false);
   const [inputImages, setinputImages] = useState<File[]>([]);
 
-  const abortController = useRef<AbortController>(new AbortController())
-  const [errMsg, seterrMsg] = useState("")
-
+  const abortController = useRef<AbortController>(new AbortController());
+  const [errMsg, seterrMsg] = useState("");
 
   useEffect(() => {
-    
     if (inputImages != null && inputImages.length > 0) {
       setisSelectedImages(true);
     } else {
@@ -47,11 +51,11 @@ function MainSection() {
   };
   // handle reset button click
   const handleResetClick = () => {
-    if (isAnalyzing){
+    if (isAnalyzing) {
       abortController.current.abort();
     }
-    fileInputRef.current.value=''
-    setprocessingMsg("")
+    fileInputRef.current.value = "";
+    setprocessingMsg("");
     setinputImages([]);
     setisSelectedImages(false);
     setisAnalyzed(false);
@@ -88,10 +92,7 @@ function MainSection() {
   const FileList2JsonArray = (imageUrlList: string[]) => {
     let outputArray: ImagesJsonArray = { images: [] };
     for (const url of imageUrlList) {
-      outputArray["images"] = [
-        ...outputArray["images"],
-        url
-      ];
+      outputArray["images"] = [...outputArray["images"], url];
     }
     return outputArray;
   };
@@ -111,17 +112,17 @@ function MainSection() {
   };
 
   const [analyzedData, setanalyzedData] = useState<ApiData>([]);
-  const [processingMsg, setprocessingMsg] = useState('')
+  const [processingMsg, setprocessingMsg] = useState("");
   const handleAnalyzeButtonClick = async () => {
     setisAnalyzing(true);
-    
-    abortController.current = new AbortController()
+
+    abortController.current = new AbortController();
     // upload file to S3
-    setprocessingMsg("Uploading images")
-    const imageUrlLists = await s3Upload(inputImages)
+    setprocessingMsg("Uploading images");
+    const imageUrlLists = await s3Upload(inputImages);
     const imageBodyRequest = FileList2JsonArray(imageUrlLists);
-    // 
-    setprocessingMsg("Analyzing data")
+    //
+    setprocessingMsg("Analyzing data");
     await fetch(apiUrl, {
       signal: abortController.current.signal,
       method: "POST",
@@ -143,15 +144,14 @@ function MainSection() {
       .then((data) => {
         setanalyzedData(data.data);
         setisAnalyzed(true);
-        setprocessingMsg("Finished")
+        setprocessingMsg("Finished");
       })
       .catch((error) => {
         console.error("An error occurred:", error.message);
-        setErrMsgBox(error.message)
+        setErrMsgBox(error.message);
         setisAnalyzing(false);
         handleResetClick();
       });
-      
   };
 
   //  iamge delete handle
@@ -179,23 +179,23 @@ function MainSection() {
   };
 
   // Error message
-  const [msgBoxElement, setmsgBoxElement] = useState<React.ReactElement|null>(null)
-  const setErrMsgBox = (message:string) => {
-    setmsgBoxElement(<ErrMsgBox message={message} kill={killMsgBox} />)
-  }
+  const [msgBoxElement, setmsgBoxElement] = useState<React.ReactElement | null>(
+    null
+  );
+  const setErrMsgBox = (message: string) => {
+    setmsgBoxElement(<ErrMsgBox message={message} kill={killMsgBox} />);
+  };
   const killMsgBox = () => {
-    setmsgBoxElement(null)
-  }
-    
-  
+    setmsgBoxElement(null);
+  };
+
   // return statement
   return (
     <div className="Main">
       <div
-        className="work-section container-md"
+        className="work-section container-sm"
         style={{ height: expandableHeight }}
       >
-        
         {/* task icon and task bar */}
         <div
           className={`name d-flex ${
@@ -204,13 +204,13 @@ function MainSection() {
               : "justify-content-center"
           }`}
         >
-                {(msgBoxElement!= null) && msgBoxElement}
+          {msgBoxElement != null && msgBoxElement}
 
-          <div className="d-flex">
+          <div className="d-flex icon-and-name">
             <img
               src={icon}
               alt="Eye icon"
-              className="me-3 ms-3"
+              className="me-3 ms-3 eye-icon"
               style={{ width: imgIconSize, height: imgIconSize }}
             />
             <span className="main-text mt-auto" style={{ fontSize: nameSize }}>
@@ -220,7 +220,7 @@ function MainSection() {
 
           {isSelectedImages && (
             <div className="d-flex align-items-center">
-              <div className="me-3">{processingMsg}</div> 
+              <div className="me-3 processing-message">{processingMsg}</div>
               <img
                 src={reset_icon}
                 alt="reset_icon"
@@ -230,7 +230,7 @@ function MainSection() {
               ></img>
               {!isAnalyzed && !isAnalyzing && (
                 <div
-                  className="button ms-4 me-3"
+                  className="button analyze-button ms-4 me-3"
                   onClick={handleAnalyzeButtonClick}
                 >
                   Analyze

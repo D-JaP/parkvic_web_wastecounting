@@ -19,7 +19,7 @@ function Instruction() {
                 <p className='doc'>Select <strong>Dropdown Icon</strong>  to see image insights, or export to <strong>XSL</strong></p>
             </div>
         </div>
-        <img src={src_img} alt='example img' className='img-eg'></img>
+        <img src={src_img} alt='example img' className='img-eg '></img>
     </div>
   )
 }

@@ -9,6 +9,8 @@ $content-text-family: "source-sans-pro", sans-serif;
     background-color: #284E36;
     height: max-content;
     width: 100vw;
+    
+
 
     .work-section {
         position: relative;
@@ -19,6 +21,11 @@ $content-text-family: "source-sans-pro", sans-serif;
         width: 100%;
         background-color: $work-color;
         border-radius: 21px;
+
+        @media (max-width: 768px) {
+            width: 90%;   
+        }
+
         .name {
             .button {
                 width: fit-content;
@@ -32,20 +39,54 @@ $content-text-family: "source-sans-pro", sans-serif;
                 &:hover {
                     cursor: pointer;
                 }
+                @media (max-width:768px) {
+                    margin: 0px 5px!important;
+                }
             }
             .reset_icon{
                 &:hover{
                     cursor: pointer;
                 }
             }
-            
+            .eye-icon {
+                @media (max-width:768px) {
+                    width: 48px!important;
+                    height: 48px!important;
+                    margin-left: 0!important;
+                    // margin-top: 5px;
+                }
+            }
+            .icon-and-name {
+                @media (max-width:768px) {
+                    justify-items: center!important;
+                    display: flex;
+                    .main-text{
+                        margin-top: auto!important;
+                        margin-bottom: auto;
+                    }
+                    
+                }
+                
+            }
+            .spinner {
+                @media (max-width:768px) {
+                    // margin-left: 0;
+                }
+            }
+            .processing-message{
+                @media (max-width:768px) {
+                    display: none!important;
+                }
+            }
         }
         .main-text {
             color: $main-color;
             font-family: $content-text-family;
             font-size: 36px;
             font-weight: bold; 
-            
+            @media (max-width:768px) {
+                font-size: 20px!important;
+            }
         }
         .space-line {
             height: 1px;
@@ -54,8 +95,14 @@ $content-text-family: "source-sans-pro", sans-serif;
             opacity: 0.5;
         }
         .dropdown-list{
+            @media (max-width:768px) {
+                margin-top: 20px!important;
+            }
             &:last-child{
                 padding-bottom  : 50px;
+                @media (max-width:768px) {
+                    padding-bottom: 20px;
+                }
             }
         }
     }
@@ -88,6 +135,9 @@ $content-text-family: "source-sans-pro", sans-serif;
             margin-right: auto;
             &:hover {
                 cursor: pointer;
+            }
+            @media (max-width: 768px) {
+                padding: 8px 20px;   
             }
         }
         .size-warning{

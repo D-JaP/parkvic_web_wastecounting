@@ -4,7 +4,42 @@ $font-stack: 'Outfit', sans-serif;
 
 .navbar {
     margin: 20px 0px;
-
+    .spacing{ 
+        flex-basis: auto;
+    }
+    @media (max-width:768px) {
+        margin-top: 5px;
+        margin-bottom: 0px;
+        padding-bottom: 0px;
+        .spacing {
+            width: 100%;
+            height: 2px;
+            background-color: var(--global-text-color);
+            flex-basis: 100%;
+            margin:5px 1% 5px 1%;
+            opacity: 0.2;
+            transition: max-height 0.3s ease-in;
+        }
+    }
+    .logo{ 
+        @media (max-width:768px) {
+            width: 70px;
+            margin-left: 10px;
+        }
+    }
+    .menu {
+        display: none;
+        width: 35px;
+        height: 35px;
+        color: white;
+        background-color: rgb(190, 190, 190);
+        border: 1px black;
+        border-radius: 5px;
+        margin-right: 5%;
+        @media (max-width:768px) {
+            display: block;
+        }
+    }
     .tab {
         .text-header {
             text-decoration: none;
@@ -12,6 +47,35 @@ $font-stack: 'Outfit', sans-serif;
             font-family: $font-stack;
             color: $text-color;
             margin-right: 30px;
+            
+            @media (max-width:768px) {
+                font-size: 18px!important;
+                flex-wrap: wrap;
+                display: flex;
+            }
+        }
+
+        @media (max-width:768px) {
+            // flex-direction: column!important;
+            display: flex;
+            flex-basis: 100%;;
+            justify-content: center;
+            font-size: 18px!important;
+            margin-top: 0;
+            margin-bottom: 5px;
+            width: 100%;
+            transition: max-height 0.3s ease-in;
+            .slash{
+                // display: none;
+            }
+
+            .signup {
+                margin-right: 0;
+            }
+            overflow: hidden;
         }
     }
+
+
+    
 }

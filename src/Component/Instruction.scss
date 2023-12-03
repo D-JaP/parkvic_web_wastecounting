@@ -5,17 +5,30 @@
     
     color: var(--global-text-color);
 
+    @media (max-width: 768px) {
+        flex-wrap:wrap;   
+    }
+
+
     h2 {
         font-size: 32;
         font-weight: 700;
         color: var(--global-text-color);
         margin-bottom: 30px;
-        margin-right: 150px;
+        margin-right: 10%;
+        @media (max-width:768px) {
+            margin-right: auto;
+            margin-left: auto;
+        }
     }
     .img-eg {
         border-radius: 50px;
-        width: 500px;
+        width: 35%;
         margin-right: 70px;
+        @media (max-width: 768px) {
+            flex-basis: 100%;   
+            margin: 10%;
+        }
     }
 
     p {
@@ -30,5 +43,10 @@
     }
     .doc {
         max-width: 600px;
+        @media (max-width:768px) {
+            text-align: left!important;
+        }
     }
+
 }
+

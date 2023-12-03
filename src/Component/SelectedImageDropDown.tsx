@@ -50,7 +50,7 @@ function SelectedImageDropDown({
       <img
         src={icon}
         alt="icon"
-        className="ms-4 me-5"
+        className="ms-4 me-5 dot-nine"
         style={{ width: "11px", height: "17px" }}
       />
       <img src={imageUrl} alt="img preview" className="img-preview me-4"></img>

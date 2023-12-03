@@ -1,5 +1,5 @@
 // Import necessary libraries and components
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Bar } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
 import ChartDataLabels from "chartjs-plugin-datalabels";
@@ -39,7 +39,7 @@ const options = {
   responsive: true,
   plugins: {
     legend: {
-      position: "right" as const,
+      position: "top" as const,
     },
     title: {
       display: true,

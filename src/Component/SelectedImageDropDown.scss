@@ -1,6 +1,21 @@
 .dropdown_tab {
     background-color: white;
     border-radius: 10px;
+
+    @media (max-width:768px) {
+        margin-left: 5%!important;
+        margin-right: 5%!important;
+        width: 90%!important;
+        .dot-nine {
+            margin-left: 10px!important;
+            margin-right: 10px!important;
+        }
+        .img-preview {
+            margin-right: 10px!important;
+        }
+    }
+
+    
     .img-preview{
         width: 75px;
         height: 75px;
@@ -28,6 +43,10 @@
         &:hover {
             cursor: pointer;
         }
+        @media (max-width:768px) {
+            margin-left: auto!important;
+            margin-right: 5px;
+        }
     }
     .img-preview {
         margin: 10px;
@@ -53,5 +72,7 @@
         &.rotated{
             transform: rotate(-180deg);
         }
+
+        
     }
 }
