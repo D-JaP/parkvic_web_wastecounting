@@ -1,15 +1,18 @@
-import React from 'react';
-import './App.css';
-import Navbar from './Component/Navbar';
-import MainSection from './Component/MainSection';
-import Instruction from './Component/Instruction';
+import React from "react";
+import "./App.css";
+
+import Home from "./Component/pages/Home";
+import About from "./Component/pages/About";
+import { Route, BrowserRouter, Routes, HashRouter } from "react-router-dom";
 function App() {
+
   return (
-    <div className="App">
-      <Navbar></Navbar>
-      <MainSection></MainSection>
-      <Instruction></Instruction>
-    </div>
+    <HashRouter >
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/about.html" element={<About />} />
+      </Routes>
+    </HashRouter>
   );
 }
 

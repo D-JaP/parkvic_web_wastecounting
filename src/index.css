@@ -3,6 +3,7 @@
   --global-text-font: "source-sans-pro", sans-serif;
   --global-text-size: 18px;
   --global-grey-color: rgba(0,0,0,0.2);
+  --global-green-color: rgb(40, 78, 54)
 }
 
 body {

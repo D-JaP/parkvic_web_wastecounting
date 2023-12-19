@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import './Navbar.scss'
+import { Link } from 'react-router-dom'
 function Navbar() {
     const logo:string = `${process.env.PUBLIC_URL}/img/parks-logo 1.png`
     const menu:string = `${process.env.PUBLIC_URL}/img/menu.svg`
@@ -19,11 +20,11 @@ function Navbar() {
         <img src={menu} alt="menu icon" className='menu' onClick={showMenu} />
         <div className='spacing' style={{maxHeight:heightMenu}}></div>
         <div className='tab' style={{maxHeight:heightMenu}}>
-          <a href='/' className='text-header'>Capabilities</a>
-          <a href='/' className='text-header'>About</a>
-          <a href='/' className='text-header me-2'>Log in</a>
+          <Link to='/about.html' className='text-header'>Capabilities</Link>
+          <a href='/' className='text-header'>Home</a>
+          {/* <a href='/' className='text-header me-2'>Log in</a>
           <span className='text-header me-2 slash'>/</span>
-          <a href='/' className='text-header signup'>Sign up</a>
+          <a href='/' className='text-header signup'>Sign up</a> */}
         </div>
     </div>
   )
