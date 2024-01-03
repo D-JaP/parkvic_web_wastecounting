@@ -1,0 +1,24 @@
+.checkout-form {
+    background-color: aliceblue;
+    padding: 10px 20px;
+    border-radius: 20px;
+    margin-left: 50px;
+    overflow: hidden;
+    max-height: 390px;
+}
+
+.pay-btn {
+    background-color: var(--global-green-color);
+    border: 1px solid var(--global-green-color);
+    color: white;
+    border-radius: 10px;
+    padding: 10px 10px;
+    margin-top: 20px;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    &:hover{
+        background-color: white;
+        color: var(--global-green-color);
+    }
+}

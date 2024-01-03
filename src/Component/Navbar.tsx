@@ -20,7 +20,8 @@ function Navbar() {
         <img src={menu} alt="menu icon" className='menu' onClick={showMenu} />
         <div className='spacing' style={{maxHeight:heightMenu}}></div>
         <div className='tab' style={{maxHeight:heightMenu}}>
-          <Link to='/about.html' className='text-header'>Capabilities</Link>
+          <Link to='/subscribe' className='text-header subscribe-btn'>Subscribe</Link>
+          <Link to='/about' className='text-header'>Capabilities</Link>
           <a href='/' className='text-header'>Home</a>
           {/* <a href='/' className='text-header me-2'>Log in</a>
           <span className='text-header me-2 slash'>/</span>
