@@ -23,6 +23,6 @@ yarn-debug.log*
 yarn-error.log*
 
 # protect key
-/src/Component/s3UpLoad.tsx
+s3UpLoad.tsx
 # ignore node module all sub folder
 node_modules

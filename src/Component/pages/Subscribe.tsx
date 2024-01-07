@@ -3,20 +3,13 @@ import Navbar from "../Navbar";
 import {
   loadStripe,
   PaymentIntent,
-  StripeCardElement,
   StripeElementsOptions,
 } from "@stripe/stripe-js";
-import {
-  CardElement,
-  Elements,
-  useStripe,
-  useElements,
-} from "@stripe/react-stripe-js";
+import { CardElement, Elements } from "@stripe/react-stripe-js";
 import CheckoutForm from "../SubscribeComponent/CheckoutForm";
 import Plan from "../SubscribeComponent/Plan";
 // import scss
 import "./Subscribe.scss";
-import { TRUE } from "sass";
 // public key
 const stripePromise = loadStripe(
   "pk_test_51OStMRK7FXjDgqHM2QtFH6tLWz0iEExwBwtsDccsWtTDusa5gZXesiw9lsQUWxCbAQNb63oephQ6ksoH0Rogc5QE00mJVCZySb"
@@ -41,7 +34,7 @@ function Subscribe() {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "POST",
       },
-      body: JSON.stringify({ body: { amount: 99, currency: "aud" } }),
+      body: JSON.stringify( { amount: 99, currency: "aud"}),
     })
       .then((res) => {
         if (res.ok) {
@@ -51,8 +44,6 @@ function Subscribe() {
         }
       })
       .then((data) => {
-        console.log(data);
-        
         setpaymentIntent(data["paymentIntent"]);
         // set client secret
         const secret = data["paymentIntent"]["client_secret"];
@@ -61,12 +52,9 @@ function Subscribe() {
         setpayElementWidth("100%");
         setShow(true);
       });
-    
-    
   };
 
-  
-  const options :StripeElementsOptions = {
+  const options: StripeElementsOptions = {
     mode: "payment",
     amount: 99,
     currency: "aud",
@@ -83,13 +71,13 @@ function Subscribe() {
       <h2 className="text-center mt-4 mb-4">Subscribe</h2>
       <div className="d-flex justify-content-center container ms-auto me-auto">
         <Plan onsubscribe={HandleOnSubscibe}></Plan>
-        {clientSecret!=="" ? (
+        {clientSecret !== "" ? (
           <div
             style={{ overflow: "hidden", maxWidth: payElementWidth }}
             className={`animation ${show ? "show" : "collapse"}`}
           >
             <Elements stripe={stripePromise} options={options}>
-              <CheckoutForm clientSecret= {clientSecret}></CheckoutForm>
+              <CheckoutForm clientSecret={clientSecret}></CheckoutForm>
             </Elements>
           </div>
         ) : null}

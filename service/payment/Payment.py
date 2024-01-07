@@ -4,8 +4,8 @@ import os
 def lambda_handler(event, context):
     stripe.api_key = os.environ.get("STRIPE_SECRET")
     data = to_dict(json.loads(json.dumps(event["body"])))
-    amount = data["body"]["amount"]
-    currency = data["body"]["currency"]
+    amount = data["amount"]
+    currency = data["currency"]
     if (amount is None or currency is None):
         return {
             "statusCode": 400,
