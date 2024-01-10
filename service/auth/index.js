@@ -1,11 +1,19 @@
 // lambda server api for exchange code for token
 // import axios
-const axios = require('axios');
 const querystring = require('querystring');
 exports.handler = async (event, context) => {
     try {
-        const authorizationCode = event.authorizationCode;
-        console.log(authorizationCode);
+        const authorizationCode = JSON.parse(event.body)["authorizationCode"]
+
+        console.log(authorizationCode)
+        if (!authorizationCode) {
+            return {
+                statusCode: 400,
+                body: JSON.stringify({
+                    error: 'missing authorization code'
+                })
+            }
+        }
         // read env secret lambda function
         const client_id = process.env.CLIENT_ID;
         const client_secret = process.env.CLIENT_SECRET;
@@ -40,11 +48,24 @@ exports.handler = async (event, context) => {
             error => console.log(error)
         )
         ;
-        
-        return {
-            statusCode: 200,
-            body: JSON.stringify(tokenResponse)
+        // check if tokenResponse has error
+        if (tokenResponse.error) {
+            return {
+                statusCode: 400,
+                body: JSON.stringify(tokenResponse)
+            }
         }
+        // success return
+        return {
+          statusCode: 200,
+          headers: {
+            Location: "/",
+          },
+          cookies: [
+            `access_token=${tokenResponse.access_token}; Secure; Path=/; Max-Age=${tokenResponse.expires_in}; SameSite=None;`,
+            `refresh_token=${tokenResponse.refresh_token}; Secure; HttpOnly; Path=/; Max-Age=${60 * 60 * 24 * 30}; SameSite=None;`,
+          ],
+        };
     }
     catch (err) {
         console.log(err);
