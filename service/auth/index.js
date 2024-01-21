@@ -41,7 +41,6 @@ exports.handler = async (event, context) => {
         }).then(
             response => response.json()
         ).then((data) => {
-            console.log(data);
             return data
         })
         .catch(
@@ -65,10 +64,6 @@ exports.handler = async (event, context) => {
             `access_token=${tokenResponse.access_token}; Secure; Path=/; Max-Age=${tokenResponse.expires_in}; SameSite=None;`,
             `refresh_token=${tokenResponse.refresh_token}; Secure; HttpOnly; Path=/; Max-Age=${60 * 60 * 24 * 30}; SameSite=None;`,
           ],
-<<<<<<< HEAD
-=======
-          body: JSON.stringify(tokenResponse),
->>>>>>> 168103f8a14dbcbc7f940a3336dc38f45f9a655b
         };
     }
     catch (err) {
