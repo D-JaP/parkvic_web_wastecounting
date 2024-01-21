@@ -8,7 +8,7 @@ exports.handler = async (event, context) => {
     const header = event.headers
     const cookies = header['Cookie']
     const refresh_token = extractRefreshToken(cookies);
-    console.log(credentials);
+    console.log("refresh token :" + refresh_token);
     if (!refresh_token) {
         return {
             statusCode: 400,
@@ -19,7 +19,9 @@ exports.handler = async (event, context) => {
     }
 
     let data = querystring.stringify({
-        token: refresh_token,
+        refresh_token: refresh_token,
+        client_id: client_id,
+        grant_type: 'refresh_token',
     });
     console.log("fetching token...");
     const token_response = await fetch(tokenEndpoint, {
@@ -30,17 +32,7 @@ exports.handler = async (event, context) => {
       },
       body: data,
     })
-      .then((response) => {
-        console.log(response);
-        response.json()
-    })
-      .then((data) => {
-        console.log(data);
-        return {
-          statusCode: 200,
-          body: JSON.stringify(data),
-        };
-      })
+      .then((response) => response.json())
       .catch((error) => {
         console.log(error);
         return {
@@ -48,8 +40,18 @@ exports.handler = async (event, context) => {
           body: JSON.stringify(error),
         };
       });
-    
-    
+
+   
+    // success return
+    return {
+      statusCode: 200,
+      headers: {
+        Location: "/",
+      },
+      cookies: [
+        `access_token=${token_response.access_token}; Secure; Path=/; Max-Age=${token_response.expires_in}; SameSite=None;`
+      ],
+    };
 }
 
 function extractRefreshToken(cookiesHeader) {

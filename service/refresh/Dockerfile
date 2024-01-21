@@ -1,6 +1,8 @@
 # Use an official Python runtime as the base image
 FROM public.ecr.aws/lambda/nodejs:20.2024.01.05.14
 
+
+
 # Copy package.json and package-lock.json to the working directory
 COPY package*.json ./
 
