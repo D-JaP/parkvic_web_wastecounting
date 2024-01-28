@@ -4,7 +4,6 @@ const querystring = require('querystring');
 exports.handler = async (event, context) => {
     try {
         const authorizationCode = JSON.parse(event.body)["authorizationCode"]
-
         console.log(authorizationCode)
         if (!authorizationCode) {
             return {
@@ -41,6 +40,7 @@ exports.handler = async (event, context) => {
         }).then(
             response => response.json()
         ).then((data) => {
+            console.log(data);
             return data
         })
         .catch(
@@ -49,21 +49,26 @@ exports.handler = async (event, context) => {
         ;
         // check if tokenResponse has error
         if (tokenResponse.error) {
+            console.error("error when getting token ");
             return {
                 statusCode: 400,
-                body: JSON.stringify(tokenResponse)
+                body: JSON.stringify({"message": tokenResponse})
             }
         }
         // success return
+        console.log("success return ");
         return {
           statusCode: 200,
           headers: {
             Location: "/",
+            "Set-Cookie": `access_token=${tokenResponse.access_token}; Secure; Path=/; Max-Age=${tokenResponse.expires_in}; SameSite=None;`,
+            "set-cookie": `refresh_token=${tokenResponse.refresh_token}; Secure; HttpOnly; Path=/; Max-Age=${60 * 60 * 24 * 30}; SameSite=None;`
           },
-          cookies: [
-            `access_token=${tokenResponse.access_token}; Secure; Path=/; Max-Age=${tokenResponse.expires_in}; SameSite=None;`,
-            `refresh_token=${tokenResponse.refresh_token}; Secure; HttpOnly; Path=/; Max-Age=${60 * 60 * 24 * 30}; SameSite=None;`,
-          ],
+        //   cookies: [
+        //     `access_token=${tokenResponse.access_token}; Secure; Path=/; Max-Age=${tokenResponse.expires_in}; SameSite=None;`,
+        //     `refresh_token=${tokenResponse.refresh_token}; Secure; HttpOnly; Path=/; Max-Age=${60 * 60 * 24 * 30}; SameSite=None;`
+        //   ],
+          body: JSON.stringify({access_token:tokenResponse.access_token})
         };
     }
     catch (err) {
