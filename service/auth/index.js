@@ -62,7 +62,9 @@ exports.handler = async (event, context) => {
           headers: {
             Location: "/",
             "Set-Cookie": `access_token=${tokenResponse.access_token}; Secure; Path=/; Max-Age=${tokenResponse.expires_in}; SameSite=None;`,
-            "set-cookie": `refresh_token=${tokenResponse.refresh_token}; Secure; HttpOnly; Path=/; Max-Age=${60 * 60 * 24 * 30}; SameSite=None;`
+            "set-cookie": `refresh_token=${tokenResponse.refresh_token}; Secure; HttpOnly; Path=/; Max-Age=${60 * 60 * 24 * 30}; SameSite=None;`,
+            "Access-Control-Allow-Origin": "http://localhost:3000",
+            "access-control-allow-credentials": "true"
           },
         //   cookies: [
         //     `access_token=${tokenResponse.access_token}; Secure; Path=/; Max-Age=${tokenResponse.expires_in}; SameSite=None;`,

@@ -55,10 +55,6 @@ exports.handler = async (event, context) => {
 }
 
 function extractRefreshToken(cookiesHeader) {
-    // Your logic to parse the cookiesHeader and extract the refresh_token
-    // Implement this according to the format of your cookies
-    // For example, you might use a library like 'cookie' or implement custom parsing logic
-    // Assuming a simple implementation where cookies are separated by semicolons
     const cookies = cookiesHeader.split(';');
     const refreshTokenCookie = cookies.find(cookie => cookie.trim().startsWith('refresh_token='));
   

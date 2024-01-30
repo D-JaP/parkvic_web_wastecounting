@@ -1,0 +1,47 @@
+import Cookies from "js-cookie";
+
+const userinfo_endpoint =
+  "https://parkvic.auth.ap-southeast-2.amazoncognito.com/oauth2/userInfo";
+
+const UserInfoCallback  = async (authContext:AuthContextProps) => {
+    // get cookie "access_token"
+    const access_token = Cookies.get("access_token");
+    if (!access_token) {
+        console.log("no access token. Trying refresh token");
+        try{
+            refreshToken();
+        }
+        catch(err){
+            console.log("no refresh token. User not logged in");
+            console.log(err)
+        }
+    }
+
+    async function fetchUser(access_token:string) {
+        const response = await fetch(userinfo_endpoint, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET",
+            Authorization: "Bearer " + access_token,
+          },
+        });
+    
+        const user_data = await response.json().catch((err) => {
+          console.log(err);
+          throw new Error("failed to get user info with err: " + err.message);
+        });
+        authContext.user = {
+          email: user_data.email,
+          username: user_data.username
+        }
+        console.log(authContext.user);
+        
+        authContext.isAuthenticate = true;
+    }
+    if(access_token) fetchUser(access_token);
+}
+
+
+export default UserInfoCallback;

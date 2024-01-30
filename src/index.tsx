@@ -23,9 +23,9 @@ const root = ReactDOM.createRoot(
 
 enableMocking().then(() => {
   root.render(
-    <React.StrictMode>
+    // <React.StrictMode>
       <App />
-    </React.StrictMode>
+    // </React.StrictMode>
   );
 })
 

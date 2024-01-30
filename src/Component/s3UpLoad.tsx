@@ -6,8 +6,8 @@ const keyPrefix = "parkvic/lambda/"
 const path_prefix = "https://parkvic-app.s3.ap-southeast-2.amazonaws.com/"
 const s3client = new S3Client({
     credentials: {
-        accessKeyId: 'AKIAZ5LGHIVTBRFLBPH7',
-        secretAccessKey: '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',
+        accessKeyId: 'AKIAZ5LGHIVTKRJQY34D',
+        secretAccessKey: '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',
     },
     region:region
 })
