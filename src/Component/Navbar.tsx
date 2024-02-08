@@ -50,11 +50,21 @@ function Navbar() {
   }, [])
   
   // logout user 
-  const logout = () => {
-      userContext.logout();
+  const logout = async () => {
       // invalidate cookies
       Cookies.remove("access_token");
-      Cookies.remove("refresh_token");
+      await fetch("https://api.parkvic.harry-playground.click/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": window.location.origin
+        },
+      }).then((response) => {
+        if (response.ok) {
+          console.log("logout success");
+        }
+      })
+      userContext.logout();
   }
   
   return (
@@ -77,7 +87,7 @@ function Navbar() {
         {(userContext.user)? (
           <>
             <a href="#" className="text-header">Hi, {userContext.user.email}</a>
-            <a href={`https://parkvic.auth.ap-southeast-2.amazoncognito.com/logout?client_id=${clientId}&logout_uri=${encodeURIComponent(window.location.origin)}`} onClick={logout}  className="text-header" >Log out</a>
+            <a href="#" onClick={logout}  className="text-header" >Log out</a>
           </>
         ) : (
           <>
