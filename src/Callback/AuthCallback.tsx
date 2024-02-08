@@ -56,9 +56,6 @@ const AuthCallback = async (code: string, authContext: AuthContextProps) => {
   
   await fetchUser(access_token);
   
-  // window.location.href = "/";
-
-  
   return authContext.user;
 };
 

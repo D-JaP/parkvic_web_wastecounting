@@ -1,5 +1,6 @@
 // lambda server api for exchange code for token
 // import axios
+const { get } = require('http');
 const querystring = require('querystring');
 exports.handler = async (event, context) => {
     try {
@@ -18,7 +19,17 @@ exports.handler = async (event, context) => {
         const client_secret = process.env.CLIENT_SECRET;
         const tokenEndpoint = process.env.TOKEN_ENDPOINT;
         const credentials = btoa(`${client_id}:${client_secret}`);
-
+        const requestOrigin = event.headers.origin;
+        const acceptedOrigin = ["http://localhost:3000", "https://localhost:3000", "https://diqvd5r88q5zx.cloudfront.net", "https://parkvic-app.harry-playground.click" ]
+        
+        if (!acceptedOrigin.includes(requestOrigin)) {
+            return {
+                statusCode: 400,
+                body: JSON.stringify({
+                    error: 'invalid origin'
+                })
+            }
+        }
         // console.log(client_id);
         // console.log(client_secret);
         // console.log(tokenEndpoint);
@@ -28,7 +39,7 @@ exports.handler = async (event, context) => {
             code: authorizationCode,
             client_id: client_id,
             client_secret: client_secret,
-            redirect_uri: 'http://localhost:3000'
+            redirect_uri: requestOrigin
         });
         const tokenResponse = await fetch(tokenEndpoint, {
             method: 'POST',
@@ -61,15 +72,11 @@ exports.handler = async (event, context) => {
           statusCode: 200,
           headers: {
             Location: "/",
-            "Set-Cookie": `access_token=${tokenResponse.access_token}; Secure; Path=/; Max-Age=${tokenResponse.expires_in}; SameSite=None;`,
-            "set-cookie": `refresh_token=${tokenResponse.refresh_token}; Secure; HttpOnly; Path=/; Max-Age=${60 * 60 * 24 * 30}; SameSite=None;`,
-            "Access-Control-Allow-Origin": "http://localhost:3000",
+            "Set-Cookie": `access_token=${tokenResponse.access_token}; Path=/; Secure;Max-Age=${tokenResponse.expires_in}; SameSite=None;Domain=${getApexDomain(requestOrigin)}`,
+            "set-cookie": `refresh_token=${tokenResponse.refresh_token}; HttpOnly; Path=/;Secure; Max-Age=${60 * 60 * 24 * 30}; SameSite=None;Domain=${getApexDomain(requestOrigin)}`,
+            "Access-Control-Allow-Origin": requestOrigin,
             "access-control-allow-credentials": "true"
           },
-        //   cookies: [
-        //     `access_token=${tokenResponse.access_token}; Secure; Path=/; Max-Age=${tokenResponse.expires_in}; SameSite=None;`,
-        //     `refresh_token=${tokenResponse.refresh_token}; Secure; HttpOnly; Path=/; Max-Age=${60 * 60 * 24 * 30}; SameSite=None;`
-        //   ],
           body: JSON.stringify({access_token:tokenResponse.access_token})
         };
     }
@@ -82,3 +89,9 @@ exports.handler = async (event, context) => {
         }
     }
 };
+
+function getApexDomain(domain){
+    const domainArray = domain.split(".");
+    const apexDomain = domainArray[domainArray.length-2] + "." + domainArray[domainArray.length-1];
+    return apexDomain;
+}

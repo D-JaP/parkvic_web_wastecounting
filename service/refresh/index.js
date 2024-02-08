@@ -6,7 +6,26 @@ const querystring = require('querystring');
 exports.handler = async (event, context) => {
     // get cookies from header of event with name refresh_token
     const header = event.headers
-    const cookies = header['Cookie']
+
+    const cookies = header['cookie']
+    if (!cookies) {
+        return {
+            statusCode: 400,
+            body: JSON.stringify({
+                error: 'missing refresh token in cookies.'
+            })
+        }
+    }
+    const requestOrigin = header.origin;
+    const acceptedOrigin = ["http://localhost:3000", "https://localhost:3000", "https://diqvd5r88q5zx.cloudfront.net", "https://parkvic-app.harry-playground.click" ]
+    if (!acceptedOrigin.includes(requestOrigin)) {
+        return {
+            statusCode: 400,
+            body: JSON.stringify({
+                error: 'invalid origin.'
+            })
+        }
+    }
     const refresh_token = extractRefreshToken(cookies);
     console.log("refresh token :" + refresh_token);
     if (!refresh_token) {
@@ -47,22 +66,35 @@ exports.handler = async (event, context) => {
       statusCode: 200,
       headers: {
         Location: "/",
+        "set-cookie": `access_token=${token_response.access_token}; Secure; Path=/; Max-Age=${token_response.expires_in}; SameSite=None;Domain=${getApexDomain(requestOrigin)}`,
+        "Access-Control-Allow-Origin": "https://parkvic-app.harry-playground.click",
+        "Access-Control-Allow-Credentials": "true",
       },
-      cookies: [
-        `access_token=${token_response.access_token}; Secure; Path=/; Max-Age=${token_response.expires_in}; SameSite=None;`
-      ],
+      body: JSON.stringify({ access_token: token_response.access_token }),
     };
 }
 
 function extractRefreshToken(cookiesHeader) {
-    const cookies = cookiesHeader.split(';');
-    const refreshTokenCookie = cookies.find(cookie => cookie.trim().startsWith('refresh_token='));
-  
-    if (refreshTokenCookie) {
-      const refreshToken = refreshTokenCookie.trim().substring('refresh_token='.length);
-      return refreshToken;
-    }
-  
-    return null; // If refresh_token cookie is not found
+  const cookies = cookiesHeader.split(";");
+  const refreshTokenCookie = cookies.find((cookie) =>
+    cookie.trim().startsWith("refresh_token=")
+  );
+
+  if (refreshTokenCookie) {
+    const refreshToken = refreshTokenCookie
+      .trim()
+      .substring("refresh_token=".length);
+    return refreshToken;
   }
-  
+
+  return null; // If refresh_token cookie is not found
+}
+
+function getApexDomain(domain) {
+  const domainArray = domain.split(".");
+  const apexDomain =
+    domainArray[domainArray.length - 2] +
+    "." +
+    domainArray[domainArray.length - 1];
+  return apexDomain;
+}

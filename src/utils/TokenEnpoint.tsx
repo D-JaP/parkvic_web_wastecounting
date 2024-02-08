@@ -1,15 +1,16 @@
-const getTokenUrl = "https://3he9549emg.execute-api.ap-southeast-2.amazonaws.com/dev/api/v1/exchangecodefortoken";
+const getTokenUrl = "https://api.parkvic.harry-playground.click/api/v1/exchangecodefortoken";
 
 export const getTokenFromCode  = async (code:string):Promise<{
   access_token: string;
 } | null>  => {
   // search for the token in the url
+  const currentOrigin :string = window.location.origin;
   const response = await fetch(getTokenUrl, {
     method: "POST",
     credentials: 'include',
     headers: {
       "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": "http://localhost:3000",
+      "Access-Control-Allow-Origin": currentOrigin,
       "Access-Control-Allow-Credentials": "true",
       // "Access-Control-Allow-Methods": "POST",
     },

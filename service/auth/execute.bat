@@ -5,4 +5,3 @@ aws ecr batch-delete-image --repository-name wastecounter_parkvic_api_exchange_c
 docker push 681503573350.dkr.ecr.ap-southeast-2.amazonaws.com/wastecounter_parkvic_api_exchange_code_for_token:latest
 
 aws lambda update-function-code --function-name wastecounter_parkvic_api_exchange_code_for_token --image-uri 681503573350.dkr.ecr.ap-southeast-2.amazonaws.com/wastecounter_parkvic_api_exchange_code_for_token:latest
-```

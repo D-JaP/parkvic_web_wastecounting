@@ -27,3 +27,7 @@ yarn-error.log*
 s3UpLoad.tsx
 # ignore node module all sub folder
 node_modules
+
+# ignore ssl key
+key.pem
+cert.pem

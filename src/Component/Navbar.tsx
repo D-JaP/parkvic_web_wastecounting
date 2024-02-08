@@ -11,15 +11,15 @@ function Navbar() {
   // local host testing
   if (window.location.hostname === "localhost") {
     loginUrl =
-      `https://parkvic.auth.ap-southeast-2.amazoncognito.com/login?client_id=${clientId}&response_type=code&scope=email+openid+phone+profile&redirect_uri=http%3A%2F%2Flocalhost%3A3000`;
+      `https://parkvic.auth.ap-southeast-2.amazoncognito.com/login?client_id=${clientId}&response_type=code&scope=email+openid+phone+profile&redirect_uri=${encodeURIComponent(window.location.origin)}`;
     signupUrl =
-      `https://parkvic.auth.ap-southeast-2.amazoncognito.com/signup?client_id=${clientId}&response_type=code&scope=email+openid+phone+profile&redirect_uri=http%3A%2F%2Flocalhost%3A3000`;
+      `https://parkvic.auth.ap-southeast-2.amazoncognito.com/signup?client_id=${clientId}&response_type=code&scope=email+openid+phone+profile&redirect_uri=${encodeURIComponent(window.location.origin)}`;
   } else {
     // production
     loginUrl =
-      `https://parkvic.auth.ap-southeast-2.amazoncognito.com/login?client_id=${clientId}&response_type=code&scope=email+openid+phone+profile&redirect_uri=https%3A%2F%2Fdiqvd5r88q5zx.cloudfront.net%2F`;
+      `https://parkvic.auth.ap-southeast-2.amazoncognito.com/login?client_id=${clientId}&response_type=code&scope=email+openid+phone+profile&redirect_uri=${encodeURIComponent(window.location.origin)}`;
     signupUrl =
-      `https://parkvic.auth.ap-southeast-2.amazoncognito.com/signup?client_id=${clientId}&response_type=code&scope=email+openid+phone+profile&redirect_uri=https%3A%2F%2Fdiqvd5r88q5zx.cloudfront.net%2F`;
+      `https://parkvic.auth.ap-southeast-2.amazoncognito.com/signup?client_id=${clientId}&response_type=code&scope=email+openid+phone+profile&redirect_uri=${encodeURIComponent(window.location.origin)}`;
   }
   const logo: string = `${process.env.PUBLIC_URL}/img/parks-logo 1.png`;
   const menu: string = `${process.env.PUBLIC_URL}/img/menu.svg`;
@@ -40,13 +40,14 @@ function Navbar() {
     // check cookies access_token present 
     // if not present, do nothing
     // if present, call UserInfoCallback
-
-    UserInfoCallback(userContext)
-  
-    return () => {
-      
+    console.log("calling user info callback");
+    const fetchData = async () => {
+      await UserInfoCallback(userContext)
     }
-  }, [userContext])
+    fetchData();
+    return () => {
+    }
+  }, [])
   
   // logout user 
   const logout = () => {
@@ -76,7 +77,7 @@ function Navbar() {
         {(userContext.user)? (
           <>
             <a href="#" className="text-header">Hi, {userContext.user.email}</a>
-            <a href={`https://parkvic.auth.ap-southeast-2.amazoncognito.com/logout?client_id=${clientId}&logout_uri=http%3A%2F%2Flocalhost%3A3000`} onClick={logout}  className="text-header" >Log out</a>
+            <a href={`https://parkvic.auth.ap-southeast-2.amazoncognito.com/logout?client_id=${clientId}&logout_uri=${encodeURIComponent(window.location.origin)}`} onClick={logout}  className="text-header" >Log out</a>
           </>
         ) : (
           <>
