@@ -3,13 +3,13 @@
 
 exports.handler = async (event, context) => {
     try {
-        const requestOrigin = event.headers.origin; 
+        const requestOrigin = event.headers['origin']; 
         return {
           statusCode: 200,
           headers: {
             Location: "/",
-            "Set-Cookie": `access_token=; Path=/; Secure;Max-Age=${0}; SameSite=None;Domain=${getApexDomain(requestOrigin)}`,
-            "set-cookie": `refresh_token=; HttpOnly; Path=/;Secure; Max-Age=${0}; SameSite=None;Domain=${getApexDomain(requestOrigin)}`,
+            "Set-Cookie": `access_token=''; Path=/; Secure;Max-Age=${0}; SameSite=None;Domain=${getApexDomain(requestOrigin)}`,
+            "set-cookie": `refresh_token=''; HttpOnly; Path=/;Secure; Max-Age=${0}; SameSite=None;Domain=${getApexDomain(requestOrigin)}`,
             "Access-Control-Allow-Origin": requestOrigin,
             "access-control-allow-credentials": "true"
           }

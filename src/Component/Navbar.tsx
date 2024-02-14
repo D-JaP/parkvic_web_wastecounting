@@ -55,9 +55,11 @@ function Navbar() {
       Cookies.remove("access_token");
       await fetch("https://api.parkvic.harry-playground.click/logout", {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": window.location.origin
+          "Access-Control-Allow-Origin": window.location.origin,
+          "Access-Control-Allow-Credentials": "true",
         },
       }).then((response) => {
         if (response.ok) {
