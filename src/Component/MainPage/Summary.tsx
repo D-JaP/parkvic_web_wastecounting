@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "./Summary.scss";
-import { ApiData, ImageCount } from "./typed";
+import { ApiData, ImageCount } from "../typed";
 import { Bar } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
 import ChartDataLabels from "chartjs-plugin-datalabels";

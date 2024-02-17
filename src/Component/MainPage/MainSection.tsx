@@ -7,12 +7,16 @@ import React, {
 } from "react";
 import "./MainSection.scss";
 import SelectedImageDropDown from "./SelectedImageDropDown";
-import { ApiData } from "./typed.ts";
+import { ApiData, ImageCount } from "../typed.ts";
 import LoadingEffect from "./LoadingEffect.tsx";
 import Summary from "./Summary.tsx";
 import * as XLSX from "xlsx";
 import ErrMsgBox from "./ErrMsgBox.tsx";
 import s3Upload from "./s3UpLoad.tsx";
+import {core_api_path} from "../../config.js";
+import Cookies from "js-cookie";
+import { getAccessToken } from "../../Callback/GetAccessToken.tsx";
+
 
 function MainSection() {
   const icon: string = `${process.env.PUBLIC_URL}/img/eye.png`;
@@ -31,6 +35,11 @@ function MainSection() {
 
   const abortController = useRef<AbortController>(new AbortController());
   const [errMsg, seterrMsg] = useState("");
+  const [isAnalyzed, setisAnalyzed] = useState(false);
+  const [isAnalyzing, setisAnalyzing] = useState(false);
+  const [analyzedData, setanalyzedData] = useState<ApiData>([]);
+  const [processingMsg, setprocessingMsg] = useState("");
+
 
   useEffect(() => {
     if (inputImages != null && inputImages.length > 0) {
@@ -85,10 +94,9 @@ function MainSection() {
   type ImagesJsonArray = {
     images: string[];
   };
-  const [isAnalyzed, setisAnalyzed] = useState(false);
-  const [isAnalyzing, setisAnalyzing] = useState(false);
-  const apiUrl =
-    "https://cbczp2vxvdpf3umb5tybcjdehi0gicgs.lambda-url.ap-southeast-2.on.aws/";
+
+  const apiUrl = core_api_path
+  // helper function
   const FileList2JsonArray = (imageUrlList: string[]) => {
     let outputArray: ImagesJsonArray = { images: [] };
     for (const url of imageUrlList) {
@@ -111,47 +119,79 @@ function MainSection() {
     });
   };
 
-  const [analyzedData, setanalyzedData] = useState<ApiData>([]);
-  const [processingMsg, setprocessingMsg] = useState("");
-  const handleAnalyzeButtonClick = async () => {
-    setisAnalyzing(true);
 
+  const handleAnalyzeButtonClick = async () => {
+    let access_token = await getAccessToken();
+    let Authorization;
+    if (!access_token) {
+      Authorization = "No auth"
+    }
+    else {
+      Authorization = "Bearer " + access_token
+    }
+    setisAnalyzing(true);
+    
     abortController.current = new AbortController();
     // upload file to S3
     setprocessingMsg("Uploading images");
-    const imageUrlLists = await s3Upload(inputImages);
-    const imageBodyRequest = FileList2JsonArray(imageUrlLists);
+    const imageUrlLists = await s3Upload(inputImages).catch((error) => {throw new Error(error.message)});
+    const imageBodyRequests : ImagesJsonArray[] = imageUrlLists.map(x => FileList2JsonArray([x])) ;
     //
     setprocessingMsg("Analyzing data");
-    await fetch(apiUrl, {
-      signal: abortController.current.signal,
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "POST",
-        "Access-Control-Allow-Headers": "Content-Type, Origin",
-      },
-      body: JSON.stringify(imageBodyRequest),
-    })
-      .then((response) => {
-        setisAnalyzing(false);
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then((data) => {
-        setanalyzedData(data.data);
+    let numAnalyzed = 0;
+
+    // update numAnalyzed
+    const updateNumAnalyzed = () => {
+      numAnalyzed++;
+      console.log("current status: "+ numAnalyzed+  "/" + inputImages.length);
+      if (numAnalyzed === inputImages.length) {
         setisAnalyzed(true);
         setprocessingMsg("Finished");
-      })
-      .catch((error) => {
-        console.error("An error occurred:", error.message);
-        setErrMsgBox(error.message);
         setisAnalyzing(false);
-        handleResetClick();
-      });
+      }
+    }
+    // fetch list image from api
+    let combinedData: ApiData = [];
+
+    const insertData = (data:ImageCount, pos:number) => {
+      combinedData.splice(pos, 0, data)
+    }
+
+    let fetchList: Array<Promise<void>> = [];
+
+    for (let i = 0;i< imageBodyRequests.length;i++){
+       fetchList.push(fetch(apiUrl, {
+        signal: abortController.current.signal,
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": document.location.origin,
+          "Authorization": Authorization,
+        },
+        body: JSON.stringify(imageBodyRequests[i]),
+      })
+        .then(async (response) => {
+          if (response.status === 403) {
+            throw new Error("User has used up all credit for today. Maximum 5 images per day. Please try again tomorrow.");
+          }
+          return response.json();
+        })
+        .then((data) => {
+          // need to put at right pos i
+          insertData(data.data[0], i);
+
+          updateNumAnalyzed();
+        })
+        .catch((error) => {
+          console.error(`An error occurred at image :${i}`, error.message);
+          setErrMsgBox(error.message);
+          setisAnalyzing(false);
+          handleResetClick();
+        }))
+    }
+    await Promise.all(fetchList);
+    setanalyzedData(combinedData);
+    console.log(combinedData);
   };
 
   //  iamge delete handle

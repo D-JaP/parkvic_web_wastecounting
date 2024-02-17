@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "./SelectedImageDropDown.scss";
-import { ImageCount } from "./typed";
+import { ImageCount } from "../typed";
 import { Bar } from "react-chartjs-2";
 import BarChart from "./BarChart";
 import ImageList from "./ImageList";

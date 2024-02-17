@@ -31,7 +31,7 @@ const CheckoutForm = ({clientSecret}:{clientSecret:string}) => {
         elements,
         clientSecret,
         confirmParams: {
-          return_url: 'http://localhost:3000/'
+          return_url: 'https://parkvic-app.harry-playground.click',
         }
       });
       if (error){

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import Navbar from "../Navbar";
+import Navbar from "../MainPage/Navbar";
 import {
   loadStripe,
   PaymentIntent,
@@ -10,12 +10,12 @@ import CheckoutForm from "../SubscribeComponent/CheckoutForm";
 import Plan from "../SubscribeComponent/Plan";
 // import scss
 import "./Subscribe.scss";
+import { payment_api_path } from "../../config";
 // public key
 const stripePromise = loadStripe(
   "pk_test_51OStMRK7FXjDgqHM2QtFH6tLWz0iEExwBwtsDccsWtTDusa5gZXesiw9lsQUWxCbAQNb63oephQ6ksoH0Rogc5QE00mJVCZySb"
 );
-const paymentIntentUrl =
-  "https://sm4gdtdhkq3wtkkafq3kn7npaq0cwcyi.lambda-url.ap-southeast-2.on.aws/";
+const paymentIntentUrl = payment_api_path;
 
 function Subscribe() {
   // show card form and create payment intent
@@ -31,8 +31,7 @@ function Subscribe() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "POST",
+        "Access-Control-Allow-Origin": "*"
       },
       body: JSON.stringify( { amount: 99, currency: "aud"}),
     })

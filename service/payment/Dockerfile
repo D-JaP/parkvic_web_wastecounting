@@ -1,18 +1,20 @@
 # Use an official Python runtime as the base image
-FROM public.ecr.aws/lambda/python:3.11
+FROM public.ecr.aws/lambda/nodejs:20.2024.01.05.14
 
+# Copy package.json and package-lock.json to the working directory
+COPY package*.json ./
 
+# Install application dependencies
+RUN npm install
 
-# Install the Python dependencies
-RUN pip install stripe
-
-# Copy the application code to the working directory
+# Copy the application files to the working directory
 COPY . ./
-
-# set port 
-EXPOSE 8080
 
 # Set the working directory in the container
 WORKDIR /tmp
-# Set the command to run the application
-CMD ["Payment.lambda_handler"]
+
+# Expose a port (adjust based on your application's requirements)
+EXPOSE 8080
+
+# Define the command to run your application
+CMD ["index.handler"]

@@ -4,7 +4,7 @@ import { Bar } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
 import ChartDataLabels from "chartjs-plugin-datalabels";
 import "./BarChart.scss";
-import { ImageCount } from "./typed";
+import { ImageCount } from "../typed";
 Chart.register(...registerables);
 
 

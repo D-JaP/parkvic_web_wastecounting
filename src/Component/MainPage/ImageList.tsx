@@ -1,7 +1,7 @@
 import "./ImageList.scss";
 
 import React, { useState } from "react";
-import { ImageCount } from "./typed";
+import { ImageCount } from "../typed";
 import OverLayImage from "./OverLayImage";
 
 function ImageList({ data }: { data: ImageCount }) {

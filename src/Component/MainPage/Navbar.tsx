@@ -1,8 +1,8 @@
 import React, { useContext, useEffect, useState } from "react";
 import "./Navbar.scss";
 import { Link } from "react-router-dom";
-import AuthContext from "../Context/AuthContext";
-import UserInfoCallback from "../Callback/UserInfoCallback";
+import AuthContext from "../../Context/AuthContext";
+import UserInfoCallback from "../../Callback/UserInfoCallback";
 import Cookies from "js-cookie";
 function Navbar() {
   let loginUrl: string;

@@ -1,26 +1,13 @@
 import Cookies from "js-cookie";
 import refreshToken from "./RefreshToken";
+import { getAccessToken } from "./GetAccessToken";
 
 const userinfo_endpoint =
   "https://parkvic.auth.ap-southeast-2.amazoncognito.com/oauth2/userInfo";
 
 const UserInfoCallback  = async (authContext:AuthContextProps) => {
-    // get cookie "access_token"
-    let access_token = Cookies.get("access_token");
-    if (!access_token) {
-        console.log("no access token. Trying refresh token");
-        try{
-            access_token = await refreshToken();
-            console.log("refresh token success.");
-            
-        }
-        catch(err){
-            console.log("no refresh token. User not logged in");
-            console.log(err)
-        }
-    }else {
-      console.log("access token found");
-    }
+    
+    let access_token = await getAccessToken()
 
     async function fetchUser(access_token:string) {
         const response = await fetch(userinfo_endpoint, {

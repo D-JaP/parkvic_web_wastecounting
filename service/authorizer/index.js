@@ -10,6 +10,7 @@ const {_200Callback ,_401Callback, _500Callback} = require('./response.js');
 
 exports.handler = async function(event, context, callback) {
     console.log('Received event:', JSON.stringify(event, null, 2));
+    console.log('Received context:', JSON.stringify(context, null, 2));
     // lambda authorizer function of main ParkVic Api
     /*the flow including:
       - check if user authenticated ? 
@@ -41,7 +42,8 @@ exports.handler = async function(event, context, callback) {
     
     var access_token_header ;
     try {
-        access_token_header= event.headers.Authorization;
+        access_token_header= event.headers.authorization;
+        console.log(access_token_header);
     }
     catch (err) {
         console.log("authorizaiton header not found. Treated as unauthenticated user");
@@ -144,7 +146,7 @@ exports.handler = async function(event, context, callback) {
                 callback(null, generateAllow('user', event.methodArn));
             }
             else {
-                callback(null, generateDeny('user', event.methodArn, "user have no credit left"));
+                callback(null, generateDeny('user', event.methodArn, "User does not have enough credit"));
             }
         }).catch((err) => {
             console.log("the ip provide not seen in db",err);
@@ -158,7 +160,7 @@ exports.handler = async function(event, context, callback) {
             callback(null, generateAllow('user', event.methodArn));
         }
         else {
-            callback(null, generateDeny('user', event.methodArn));
+            callback(null, generateDeny('user', event.methodArn, "User does not have enough credit"));
         }
     }
      
@@ -185,17 +187,17 @@ var generatePolicy = function(principalId, effect, resource, messages) {
     }
     // Optional output with custom properties of the String, Number or Boolean type.
     authResponse.context = {
-        "messages" : messages
+        "message" : messages
     };
     return authResponse;
 }
      
 var generateAllow = function(principalId, resource, messages = "") {
-    return generatePolicy(principalId, 'Allow', resource);
+    return generatePolicy(principalId, 'Allow', resource, messages);
 }
      
 var generateDeny = function(principalId, resource, messages = "") {
-    return generatePolicy(principalId, 'Deny', resource);
+    return generatePolicy(principalId, 'Deny', resource, messages);
 }
 
 
@@ -301,7 +303,7 @@ async function isUserHaveCredit(input_querystring , mode = "email", tablename = 
             }
         );
     }else {
-        if (credit==0){
+        if (credit<=0){
             return false;
         }
 

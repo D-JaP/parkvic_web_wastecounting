@@ -7,7 +7,7 @@ function Plan({onsubscribe}:{onsubscribe:()=>void}) {
     <div className='plan-form content-center'>
         <h3>Standard Plan</h3>
         <p className="price">$0.99 <span>/month</span></p>
-        <p>2000 images per month</p>
+        <p>Unlimited Images</p>
         <p>No image storage fee</p>
         <button className='btn' onClick={onsubscribe}>Subscribe now</button>
     </div>

@@ -1,7 +1,7 @@
 import React from 'react'
-import Navbar from '../Navbar'
-import MainSection from '../MainSection'
-import Instruction from '../Instruction'
+import Navbar from '../MainPage/Navbar'
+import MainSection from '../MainPage/MainSection'
+import Instruction from '../MainPage/Instruction'
 
 function Home() {
   return (
