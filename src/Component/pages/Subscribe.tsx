@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import Navbar from "../MainPage/Navbar";
 import {
   loadStripe,
@@ -11,6 +11,7 @@ import Plan from "../SubscribeComponent/Plan";
 // import scss
 import "./Subscribe.scss";
 import { payment_api_path } from "../../config";
+import AuthContext from "../../Context/AuthContext";
 // public key
 const stripePromise = loadStripe(
   "pk_test_51OStMRK7FXjDgqHM2QtFH6tLWz0iEExwBwtsDccsWtTDusa5gZXesiw9lsQUWxCbAQNb63oephQ6ksoH0Rogc5QE00mJVCZySb"
@@ -25,7 +26,10 @@ function Subscribe() {
   const [paymentIntent, setpaymentIntent] = useState<PaymentIntent | null>(
     null
   );
+  const userContext = useContext(AuthContext)
   const HandleOnSubscibe = async () => {
+    
+
     // get payment intent
     await fetch(paymentIntentUrl, {
       method: "POST",
@@ -33,7 +37,7 @@ function Subscribe() {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "*"
       },
-      body: JSON.stringify( { amount: 99, currency: "aud"}),
+      body: JSON.stringify( { amount: 99, currency: "aud", email: userContext.user?.email}),
     })
       .then((res) => {
         if (res.ok) {

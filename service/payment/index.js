@@ -1,12 +1,12 @@
 const stripe = require('stripe')(process.env.STRIPE_SECRET);
-
-exports.handler = async (event, context) => {
+const axios = require('axios');
+const userinfo_url = process.env.USER_ENDPOINT;
+exports.handler = async (event, context, callback) => {
     try {
         // Parse event body JSON
         const body = JSON.parse(event.body);
-        
         // Extract amount and currency from the request body
-        const { amount, currency } = body;
+        const { amount, currency, email} = body;
         
         // Check if amount and currency are provided
         if (!amount || !currency) {
@@ -20,8 +20,10 @@ exports.handler = async (event, context) => {
         
         // Create a PaymentIntent with Stripe
         const paymentIntent = await stripe.paymentIntents.create({
-            amount,
-            currency
+            amount : amount,
+            currency: currency,
+            description: "Parkvic App Payment Intent",
+            receipt_email: email
         });
         
         // Return the PaymentIntent in the response
@@ -31,7 +33,7 @@ exports.handler = async (event, context) => {
                 'Content-Type': 'application/json',
                 'Access-Control-Allow-Origin': 'https://parkvic-app.harry-playground.click'
             },
-            
+
             body: JSON.stringify({
                 paymentIntent
             })
