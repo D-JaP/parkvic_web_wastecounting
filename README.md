@@ -1,19 +1,18 @@
-# Getting Started
+
+# Litter Insight App
 
 This project is a web deployment of Park Victoria Waste Counting App with [AI engine](https://github.com/D-JaP/WasteCounting).
 
-## Run the app
+# Tech Stack
+- AWS Lambda, API Gateway, Cognito, DynamoDb, CloudFront, S3 (Backend)
+- React JS (Frontend)
+- Stripe (Payment)
+- Docker 
 
-In the project directory, you can run:
+## Usage
 
-### `npm start`
+Simply go to this link [Litter Insight App](https://parkvic-app.harry-playground.click/) to try the api.
 
+## License
 
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
+[MIT](https://choosealicense.com/licenses/mit/)
