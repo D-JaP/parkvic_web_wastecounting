@@ -1,0 +1,29 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  ParkVicWebBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: 'parkvic-app'
+      AccessControl: 'PublicRead'
+      WebsiteConfiguration:
+        IndexDocument: 'index.html'
+  BucketPolicy:
+    Type: 'AWS::S3::BucketPolicy'
+    Properties:
+      Bucket: !Ref ParkVicWebBucket
+      PolicyDocument:
+        Statement:
+          - Sid: "allow-ee-access"
+            Effect: "Allow"
+            Principal: "*"
+            Action:
+              - "s3:GetObject"
+              - "s3:ListBucket"
+            Resource:
+              - "arn:aws:s3:::parkvic-app.harry-playground.click/*"
+              - "arn:aws:s3:::parkvic-app.harry-playground.click"
+          - Sid: "allow-public-write-lambda"
+            Effect: "Allow"
+            Principal: "*"
+            Action: "s3:PutObject"
+            Resource: "arn:aws:s3:::parkvic-app.harry-playground.click/parkvic/lambda/*"

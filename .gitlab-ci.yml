@@ -1,0 +1,33 @@
+# smple ci gitlab file
+# This file is a template, and might need editing before it works on your project.
+
+stages:
+  - build-app
+  - deploy
+
+build:
+  stage: build-app
+  script:
+    - echo "Building the app"
+    - echo "Build completed on $(date)"
+    - npm run build
+    # - aws s3 sync ./build/. s3://parkvic-app.harry-playground.click
+    # - aws cloudfront create-invalidation --distribution-id E1F7CU4PTHROI3 --paths "/*"
+  only:
+    changes:
+    - src/**/*.*
+    - *.json
+
+build-auth-service:
+  stage: build-app
+  script:
+    - echo "Building the auth service"
+    - cd service
+    - cd auth
+    - docker build --rm --progress plain -t wastecounter_parkvic_api_exchange_code_for_token . 
+    - docker tag wastecounter_parkvic_api_exchange_code_for_token:latest 681503573350.dkr.ecr.ap-southeast-2.amazonaws.com/wastecounter_parkvic_api_exchange_code_for_token:latest
+  only:
+    changes:
+      - service/auth/index.js
+      - service/auth/package.json
+      
