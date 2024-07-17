@@ -2,6 +2,7 @@
 // import axios
 const { get } = require('http');
 const querystring = require('querystring');
+const { host_origin } = require('../../src/config');
 exports.handler = async (event, context) => {
     try {
         const authorizationCode = JSON.parse(event.body)["authorizationCode"]
@@ -20,7 +21,7 @@ exports.handler = async (event, context) => {
         const tokenEndpoint = process.env.TOKEN_ENDPOINT;
         const credentials = btoa(`${client_id}:${client_secret}`);
         const requestOrigin = event.headers.origin;
-        const acceptedOrigin = ["http://localhost:3000", "https://localhost:3000", "https://diqvd5r88q5zx.cloudfront.net", "https://parkvic-app.harry-playground.click" ]
+        const acceptedOrigin = ["http://localhost:3000", "https://localhost:3000", "https://diqvd5r88q5zx.cloudfront.net", host_origin ]
         
         if (!acceptedOrigin.includes(requestOrigin)) {
             return {

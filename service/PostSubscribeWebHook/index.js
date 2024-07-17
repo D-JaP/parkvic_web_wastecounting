@@ -8,6 +8,7 @@ const {
 
 const client = new DynamoDBClient({ region: "ap-southeast-2" });
 const docClient = DynamoDBDocumentClient.from(client);
+const userTableName = process.env.USER_TABLE_NAME;
 
 exports.handler = async (event, context, callback) => {
     const eventBody = JSON.parse(event.body);
@@ -43,7 +44,7 @@ exports.handler = async (event, context, callback) => {
 
 function updateSubscriptionStatus(email, status) {
     const params = {
-        TableName: "parkvic",
+        TableName: userTableName,
         Key: {
             email: email,
         },

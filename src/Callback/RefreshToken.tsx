@@ -1,4 +1,4 @@
-const refreshTokenUrl = 'https://api.parkvic.harry-playground.click/api/v1/refreshtoken';
+import { host_origin, refreshTokenUrl } from '../config';
 
 const refreshToken = async () => {
     
@@ -7,7 +7,7 @@ const refreshToken = async () => {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': 'https://parkvic-app.harry-playground.click',
+                'Access-Control-Allow-Origin': host_origin,
             },
             credentials: 'include',
         });

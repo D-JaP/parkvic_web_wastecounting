@@ -1,29 +1,883 @@
 AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  # CognitoClientID:
+  #   Type: String
+  #   Description: 'Cognito Client ID'
+  #   Default: '572aocggegc3gkbeuba7mr16qv'
+  UserPoolSecret: #need update if stack is firstly created
+    Type: String
+    Description: 'Cognito Client Secret'
+    Default: '1tafbsgc2o0c2vf1hrpnn4co5f726kcid6g0quh81dhjlngoftdg'
+  UserPoolDomain:
+    Type: String
+    Description: 'Cognito User Pool Domain'
+    Default: 'parkvic'
 Resources:
-  ParkVicWebBucket:
-    Type: 'AWS::S3::Bucket'
+  # ParkVicWebBucket:
+  #   Type: 'AWS::S3::Bucket'
+  #   Properties:
+  #     BucketName: 'parkvic-app'
+  #     AccessControl: 'PublicRead'
+  #     WebsiteConfiguration:
+  #       IndexDocument: 'index.html'
+  # BucketPolicy:
+  #   Type: 'AWS::S3::BucketPolicy'
+  #   Properties:
+  #     Bucket: !Ref ParkVicWebBucket
+  #     PolicyDocument:
+  #       Statement:
+  #         - Sid: "allow-ee-access"
+  #           Effect: "Allow"
+  #           Principal: "*"
+  #           Action:
+  #             - "s3:GetObject"
+  #             - "s3:ListBucket"
+  #           Resource:
+  #             - "arn:aws:s3:::parkvic-app.harry-playground.click/*"
+  #             - "arn:aws:s3:::parkvic-app.harry-playground.click"
+  #         - Sid: "allow-public-write-lambda"
+  #           Effect: "Allow"
+  #           Principal: "*"
+  #           Action: "s3:PutObject"
+  #           Resource: "arn:aws:s3:::parkvic-app.harry-playground.click/parkvic/lambda/*"
+
+  ParkvicRestApi:
+    Type: 'AWS::ApiGatewayV2::Api'
     Properties:
-      BucketName: 'parkvic-app'
-      AccessControl: 'PublicRead'
-      WebsiteConfiguration:
-        IndexDocument: 'index.html'
-  BucketPolicy:
-    Type: 'AWS::S3::BucketPolicy'
+      Name: ParkvicAPIGatewaywithDomainName
+      DisableExecuteApiEndpoint: false
+      ProtocolType: HTTP
+      CorsConfiguration:
+        AllowOrigins:
+          - 'https://parkvic.harry-playground.click'
+          - 'https://parkvic-app.harry-playground.click'
+          - 'https://parkvic-admin.harry-playground.click'
+        AllowMethods:
+          - 'GET'
+          - 'POST'
+          - 'PUT'
+          - 'DELETE'
+          - 'OPTIONS'
+        AllowHeaders:
+          - 'Content-Type'
+          - 'Authorization'
+          - 'X-Api-Key'
+          - 'X-Amz-Security-Token'
+          - 'X-Amz-Content-Sha256'
+          - 'X-Amz-Date'
+          - 'X-Amz-Source-Arn'
+          - 'X-Amz-Caller-Arn'
+          - 'X-Amz-User-Agent'
+          - 'X-Amz-Content-Length'
+          - 'X-Amz-Function-Name'
+          - 'X-Amz-Log-Type'
+          - 'X-Amz-Client-Context'
+          - 'X-Amz-Cognito-Identity'
+          - 'X-Amz-Invocation-Type'
+          - 'X-Amz-Payload-Signature'
+          - 'Access-Control-Allow-Origin'
+          - 'Access-Control-Allow-Headers'
+          - 'Access-Control-Allow-Credentials'
+        AllowCredentials: true
+
+  ParkvicDomainName:
+    Type: 'AWS::ApiGatewayV2::DomainName'
     Properties:
-      Bucket: !Ref ParkVicWebBucket
-      PolicyDocument:
+      DomainName: 'api-v2.parkvic.harry-playground.click'
+      DomainNameConfigurations: 
+        - CertificateArn: !Sub 'arn:aws:acm:${AWS::Region}:${AWS::AccountId}:certificate/8a70ed37-a5a7-41d9-8ae4-616810d1e332'
+          EndpointType: 'REGIONAL'
+      
+  DomainNameMapping:
+    Type: 'AWS::ApiGatewayV2::ApiMapping'
+    Properties:
+      ApiId: !Ref ParkvicRestApi
+      DomainName: !Ref ParkvicDomainName
+      Stage: !Ref StageDev
+
+  # route53 record mapping custom domain name to regional domain name
+  ParkvicDomainNameRecord:
+    Type: 'AWS::Route53::RecordSet'
+    Properties:
+      HostedZoneId: 'Z07494221BVZT40TN0UNR'
+      Name: 'api-v2.parkvic.harry-playground.click'
+      Type: 'CNAME'
+      TTL: '300'
+      ResourceRecords:
+        - !GetAtt [ ParkvicDomainName, RegionalDomainName]
+        # HostedZoneId: 'Z2RPCDW04V8134' # hosted zone id aws region southest ap 2
+
+  LambdaAuthorizer:
+    Type: 'AWS::ApiGatewayV2::Authorizer'
+    Properties:
+      Name: 'LambdaAuthorizer'
+      ApiId: !Ref ParkvicRestApi
+      AuthorizerType: REQUEST 
+      AuthorizerUri: 
+        Fn::Sub:
+          - "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AuthorizerArn}/invocations"
+          - { AuthorizerArn: !GetAtt Authorizer.Arn}
+
+      AuthorizerPayloadFormatVersion: "1.0"
+      
+  CognitoAuthorizer:
+    Type: 'AWS::ApiGatewayV2::Authorizer'
+    Properties:
+      Name: 'CognitoAuthorizer'
+      ApiId: !Ref ParkvicRestApi
+      AuthorizerType: JWT
+      JwtConfiguration:
+        Audience: 
+          - 'admin'
+          - 'user'
+        Issuer: 
+          'Fn::GetAtt': [ CognitoUserPool, ProviderURL ]
+      IdentitySource: 
+        - $request.header.Authorization
+
+  CognitoUserPoolDomain:
+    Type: 'AWS::Cognito::UserPoolDomain'
+    Properties:
+      Domain: !Ref UserPoolDomain
+      UserPoolId: !Ref CognitoUserPool
+
+  CognitoUserPoolClient:
+    Type: 'AWS::Cognito::UserPoolClient'
+    Properties:
+      ClientName: 'parkvic'
+      UserPoolId: !Ref CognitoUserPool
+      GenerateSecret: true
+      RefreshTokenValidity: 30
+      AccessTokenValidity: 60
+      IdTokenValidity: 60
+      TokenValidityUnits:
+        AccessToken: 'minutes'
+        IdToken: 'minutes'
+        RefreshToken: 'days'
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthFlows:
+        - code
+      AllowedOAuthScopes:
+        - email
+        - openid
+        - profile
+        - phone
+      CallbackURLs:
+        - "https://localhost:3000"
+        - "https://parkvic-app.harry-playground.click"
+        - "https://parkvic.auth.ap-southeast-2.amazoncognito.com"
+        - "https://parkvic.auth.ap-southeast-2.amazoncognito.com/oauth2/idpresponse"
+      LogoutURLs:
+        - "http://localhost:3000"
+        - "https://localhost:3000"
+        - "https://parkvic-app.harry-playground.click"
+        - "https://parkvic.auth.ap-southeast-2.amazoncognito.com"
+      SupportedIdentityProviders:
+        - COGNITO
+        - Google
+      PreventUserExistenceErrors: ENABLED
+      ExplicitAuthFlows:
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+      EnableTokenRevocation: true
+      EnablePropagateAdditionalUserContextData: false
+      AuthSessionValidity: 3
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthFlows:
+        - code
+
+      CallbackURLs:
+        - 'https://parkvic.harry-playground.click'
+        - 'https://parkvic-app.harry-playground.click'
+        - 'https://parkvic-admin.harry-playground.click'
+      LogoutURLs:
+        - 'https://parkvic.harry-playground.click'
+        - 'https://parkvic-app.harry-playground.click'
+        - 'https://parkvic-admin.harry-playground.click'
+      SupportedIdentityProviders:
+        - COGNITO
+      ReadAttributes:
+        - email
+        - email_verified
+        - phone_number
+        - phone_number_verified
+        - address
+        - birthdate
+        - family_name
+      WriteAttributes:
+        - email
+        - phone_number
+        - address
+        - birthdate
+        - family_name
+
+  CognitoUserPool:
+    Type: 'AWS::Cognito::UserPool'
+    Properties:
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireUppercase: true
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+          TemporaryPasswordValidityDays: 7
+      DeletionProtection: INACTIVE
+      Schema:
+        - Name: sub
+          AttributeDataType: String
+          DeveloperOnlyAttribute: false
+          Mutable: false
+          Required: true
+          StringAttributeConstraints:
+            MinLength: '1'
+            MaxLength: '2048'
+        - Name: name
+          AttributeDataType: String
+          DeveloperOnlyAttribute: false
+          Mutable: true
+          Required: false
+          StringAttributeConstraints:
+            MinLength: '0'
+            MaxLength: '2048'
+        - Name: given_name
+          AttributeDataType: String
+          DeveloperOnlyAttribute: false
+          Mutable: true
+          Required: false
+          StringAttributeConstraints:
+            MinLength: '0'
+            MaxLength: '2048'
+        - Name: family_name
+          AttributeDataType: String
+          DeveloperOnlyAttribute: false
+          Mutable: true
+          Required: false
+          StringAttributeConstraints:
+            MinLength: '0'
+            MaxLength: '2048'
+        - Name: middle_name
+          AttributeDataType: String
+          DeveloperOnlyAttribute: false
+          Mutable: true
+          Required: false
+          StringAttributeConstraints:
+            MinLength: '0'
+            MaxLength: '2048'
+        - Name: nickname
+          AttributeDataType: String
+          DeveloperOnlyAttribute: false
+          Mutable: true
+          Required: false
+          StringAttributeConstraints:
+            MinLength: '0'
+            MaxLength: '2048'
+        - Name: preferred_username
+          AttributeDataType: String
+          DeveloperOnlyAttribute: false
+          Mutable: true
+          Required: false
+          StringAttributeConstraints:
+            MinLength: '0'
+            MaxLength: '2048'
+        - Name: profile
+          AttributeDataType: String
+          DeveloperOnlyAttribute: false
+          Mutable: true
+          Required: false
+          StringAttributeConstraints:
+            MinLength: '0'
+            MaxLength: '2048'
+        - Name: picture
+          AttributeDataType: String
+          DeveloperOnlyAttribute: false
+          Mutable: true
+          Required: false
+          StringAttributeConstraints:
+            MinLength: '0'
+            MaxLength: '2048'
+        - Name: website
+          AttributeDataType: String
+          DeveloperOnlyAttribute: false
+          Mutable: true
+          Required: false
+          StringAttributeConstraints:
+            MinLength: '0'
+            MaxLength: '2048'
+        - Name: email
+          AttributeDataType: String
+          DeveloperOnlyAttribute: false
+          Mutable: true
+          Required: true
+          StringAttributeConstraints:
+            MinLength: '0'
+            MaxLength: '2048'
+        - Name: email_verified
+          AttributeDataType: Boolean
+          DeveloperOnlyAttribute: false
+          Mutable: true
+          Required: false
+        - Name: gender
+          AttributeDataType: String
+          DeveloperOnlyAttribute: false
+          Mutable: true
+          Required: false
+          StringAttributeConstraints:
+            MinLength: '0'
+            MaxLength: '2048'
+        - Name: birthdate
+          AttributeDataType: String
+          DeveloperOnlyAttribute: false
+          Mutable: true
+          Required: false
+          StringAttributeConstraints:
+            MinLength: '10'
+            MaxLength: '10'
+        - Name: zoneinfo
+          AttributeDataType: String
+          DeveloperOnlyAttribute: false
+          Mutable: true
+          Required: false
+          StringAttributeConstraints:
+            MinLength: '0'
+            MaxLength: '2048'
+        - Name: locale
+          AttributeDataType: String
+          DeveloperOnlyAttribute: false
+          Mutable: true
+          Required: false
+          StringAttributeConstraints:
+            MinLength: '0'
+            MaxLength: '2048'
+        - Name: phone_number
+          AttributeDataType: String
+          DeveloperOnlyAttribute: false
+          Mutable: true
+          Required: false
+          StringAttributeConstraints:
+            MinLength: '0'
+            MaxLength: '20'
+        - Name: address
+          AttributeDataType: String
+          DeveloperOnlyAttribute: false
+          Mutable: true
+          Required: false
+          StringAttributeConstraints:
+            MinLength: '0'
+            MaxLength: '2048'
+        - Name: updated_at
+          AttributeDataType: Number
+          DeveloperOnlyAttribute: false
+          Mutable: true
+          Required: false
+          NumberAttributeConstraints:
+            MinValue: '0'
+        - Name: identities
+          AttributeDataType: String
+          DeveloperOnlyAttribute: false
+          Mutable: true
+          Required: false
+        
+      AutoVerifiedAttributes:
+        - email
+      UsernameAttributes:
+        - email
+      VerificationMessageTemplate:
+        DefaultEmailOption: CONFIRM_WITH_CODE
+      UserAttributeUpdateSettings:
+        AttributesRequireVerificationBeforeUpdate:
+          - email
+      MfaConfiguration: 'OFF'
+      EmailConfiguration:
+        EmailSendingAccount: COGNITO_DEFAULT
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: false
+      UsernameConfiguration:
+        CaseSensitive: false
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Priority: 1
+            Name: verified_email
+  
+
+  # Lambda function service
+
+  ParkvicApiV2LambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      PackageType: Image
+      Code:
+        ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/wastecounter_parkvic_api_v2:latest"
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Timeout: 300
+      MemorySize: 6000
+      Environment:
+        Variables:
+          CLIENT_ID: !GetAtt [CognitoUserPoolClient, ClientId]
+          CLIENT_SECRET: !Ref UserPoolSecret
+          TOKEN_ENDPOINT: !Sub 'https://${UserPoolDomain}.auth.${AWS::Region}.amazoncognito.com/oauth2/token/'
+      
+
+  ExchangeCodeForTokenLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      PackageType: Image
+      Code:
+        ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/wastecounter_parkvic_api_exchange_code_for_token:latest"
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Timeout: 300
+      MemorySize: 512
+      Environment:
+        Variables:
+          CLIENT_ID: !GetAtt [CognitoUserPoolClient, ClientId]
+          CLIENT_SECRET: !Ref UserPoolSecret
+          TOKEN_ENDPOINT: !Sub 'https://${UserPoolDomain}.auth.${AWS::Region}.amazoncognito.com/oauth2/token/'
+
+  ExchangeCodeForTokenLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      PackageType: Image
+      Code:
+        ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/wastecounter_parkvic_api_exchange_code_for_token:latest"
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Timeout: 300
+      MemorySize: 512
+      Environment:
+        Variables:
+          CLIENT_ID: !GetAtt [CognitoUserPoolClient, ClientId]
+          CLIENT_SECRET: !Ref UserPoolSecret
+          TOKEN_ENDPOINT: !Sub 'https://${UserPoolDomain}.auth.${AWS::Region}.amazoncognito.com/oauth2/token/'
+  Authorizer:
+    Type: AWS::Lambda::Function
+    Properties:
+      PackageType: Image
+      Code:
+        ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/parkvic-authorizer:latest"
+      Role: !GetAtt DynamoDbWriteRole.Arn
+      Timeout: 300
+      MemorySize: 512
+      Environment:
+        Variables:
+          CLIENT_ID: !GetAtt [CognitoUserPoolClient, ClientId]
+          CLIENT_SECRET: !Ref UserPoolSecret
+          TOKEN_ENDPOINT: !Sub 'https://${UserPoolDomain}.auth.${AWS::Region}.amazoncognito.com/oauth2/userInfo/'
+          CREDIT_LIMIT: 500
+          USER_POOL_ID: !Ref CognitoUserPool
+          USER_TABLE_NAME: ParkvicUser
+          UNAUTHENTICATED_USER_TABLE_NAME: ParkvicUnauthenticatedUser
+
+  LogoutLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        ZipFile: |
+          // lambda server api for  logout
+          // import axios
+
+          exports.handler = async (event, context) => {
+              try {
+                  const requestOrigin = event.headers['origin']; 
+                  return {
+                    statusCode: 200,
+                    headers: {
+                      Location: "/",
+                      "Set-Cookie": `access_token=''; Path=/; Secure; Max-Age=${0}; SameSite=None; Domain=${getApexDomain(requestOrigin)}`,
+                      "Access-Control-Allow-Origin": requestOrigin,
+                      "Access-Control-Allow-Credentials": "true"
+                    }
+                  };
+              }
+              catch (err) {
+                  console.log(err);
+
+                  return {
+                      statusCode: 500,
+                      body: JSON.stringify(err)
+                  }
+              }
+          };
+
+          function getApexDomain(domain){
+              const domainArray = domain.split(".");
+              const apexDomain = domainArray[domainArray.length-2] + "." + domainArray[domainArray.length-1];
+              return apexDomain;
+          }
+      Handler: index.handler
+      Runtime: nodejs16.x
+      Timeout: 30
+      MemorySize: 128
+      Environment:
+        Variables:
+          NODE_ENV: production
+      Role: !GetAtt LambdaExecutionRole.Arn
+  PaymentIntentLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      PackageType: Image
+      Code:
+        ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/payment_intent:latest"
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Timeout: 300
+      MemorySize: 512
+      Environment:
+        Variables:
+          STRIPE_SECRET: sk_test_51OStMRK7FXjDgqHM3aL7I8qpYFJHvbo7ymRRfwlx3M1UHnJlWfqk7p9xPAOv82OShlGAQ1THPaUoRHyXtorHq4SN002YJHKGbh
+  PostSubcribeWebhookLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      PackageType: Image
+      Code:
+        ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/parkvic-stripe-webhook:latest"
+      Role: !GetAtt DynamoDbWriteRole.Arn
+      Timeout: 300
+      MemorySize: 512
+      
+  PresignUrlLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      PackageType: Image
+      Code:
+        ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/presignurl:latest"
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Timeout: 300
+      MemorySize: 128
+      Environment:
+        Variables:
+          BUCKET_NAME: "parkvic-app"
+          key: "parkvic/lambda/"
+          contentType : "image/jpeg"
+
+  RefreshLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      PackageType: Image
+      Code:
+        ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/refresh:latest"
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Timeout: 300
+      MemorySize: 512
+      Environment:
+        Variables:
+          CLIENT_ID: !GetAtt [CognitoUserPoolClient, ClientId]
+          CLIENT_SECRET: !Ref UserPoolSecret
+          TOKEN_ENDPOINT: !Sub 'https://${UserPoolDomain}.auth.${AWS::Region}.amazoncognito.com/oauth2/token/'
+
+  # lambda function role
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
         Statement:
-          - Sid: "allow-ee-access"
-            Effect: "Allow"
-            Principal: "*"
-            Action:
-              - "s3:GetObject"
-              - "s3:ListBucket"
-            Resource:
-              - "arn:aws:s3:::parkvic-app.harry-playground.click/*"
-              - "arn:aws:s3:::parkvic-app.harry-playground.click"
-          - Sid: "allow-public-write-lambda"
-            Effect: "Allow"
-            Principal: "*"
-            Action: "s3:PutObject"
-            Resource: "arn:aws:s3:::parkvic-app.harry-playground.click/parkvic/lambda/*"
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaExecutionPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: '*'
+        - PolicyName: ApiGatewayV2ExecutionPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:*"
+  
+  DynamoDbWriteRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaExecutionPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: '*'
+        - PolicyName: ApiGatewayV2ExecutionPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:*"
+        - PolicyName: DynamoDbWritePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:UpdateTable
+                  - dynamodb:DeleteItem
+                  - dynamodb:GetItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                Resource: !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/*"
+
+  #lambda invoke permission
+  ApiGatewayV2InvokeLambdaPermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      FunctionName: !GetAtt ParkvicApiV2LambdaFunction.Arn
+      Action: 'lambda:InvokeFunction'
+      Principal: 'apigateway.amazonaws.com'
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ParkvicRestApi}/*/*"
+  ExchangeCodeForTokenLambdaInvokeLambdaPermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      FunctionName: !GetAtt ExchangeCodeForTokenLambdaFunction.Arn
+      Action: 'lambda:InvokeFunction'
+      Principal: 'apigateway.amazonaws.com'
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ParkvicRestApi}/*/*"
+  AuthorizerInvokeLambdaPermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      FunctionName: !GetAtt Authorizer.Arn
+      Action: 'lambda:InvokeFunction'
+      Principal: 'apigateway.amazonaws.com'
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ParkvicRestApi}/*/*"
+  LogoutLambdaFunctionInvokeLambdaPermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      FunctionName: !GetAtt LogoutLambdaFunction.Arn
+      Action: 'lambda:InvokeFunction'
+      Principal: 'apigateway.amazonaws.com'
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ParkvicRestApi}/*/*"
+  PaymentIntentLambdaFunctionInvokeLambdaPermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      FunctionName: !GetAtt PaymentIntentLambdaFunction.Arn
+      Action: 'lambda:InvokeFunction'
+      Principal: 'apigateway.amazonaws.com'
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ParkvicRestApi}/*/*"
+  PostSubcribeWebhookLambdaFunctionInvokeLambdaPermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      FunctionName: !GetAtt PostSubcribeWebhookLambdaFunction.Arn
+      Action: 'lambda:InvokeFunction'
+      Principal: 'apigateway.amazonaws.com'
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ParkvicRestApi}/*/*"
+  PresignUrlLambdaFunctionInvokeLambdaPermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      FunctionName: !GetAtt PresignUrlLambdaFunction.Arn
+      Action: 'lambda:InvokeFunction'
+      Principal: 'apigateway.amazonaws.com'
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ParkvicRestApi}/*/*"
+  RefreshLambdaFunctionInvokeLambdaPermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      FunctionName: !GetAtt RefreshLambdaFunction.Arn
+      Action: 'lambda:InvokeFunction'
+      Principal: 'apigateway.amazonaws.com'
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ParkvicRestApi}/*/*"
+  
+  # Integration
+  ExchangeCodeForTokenLambdaFunctionIntegration:
+    Type: 'AWS::ApiGatewayV2::Integration'
+    Properties:
+      ApiId: !Ref ParkvicRestApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ExchangeCodeForTokenLambdaFunction.Arn}/invocations"
+      IntegrationMethod: POST
+      PayloadFormatVersion: 2.0
+      TimeoutInMillis: 30000
+  AuthorizerIntegration:
+    Type: 'AWS::ApiGatewayV2::Integration'
+    Properties:
+      ApiId: !Ref ParkvicRestApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Authorizer.Arn}/invocations"
+      IntegrationMethod: POST
+      PayloadFormatVersion: 1.0
+      TimeoutInMillis: 30000
+  LogoutLambdaFunctionIntegration:
+    Type: 'AWS::ApiGatewayV2::Integration'
+    Properties:
+      ApiId: !Ref ParkvicRestApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LogoutLambdaFunction.Arn}/invocations"
+      IntegrationMethod: POST
+      PayloadFormatVersion: 2.0
+      TimeoutInMillis: 30000
+  PaymentIntentLambdaFunctionIntegration:
+    Type: 'AWS::ApiGatewayV2::Integration'
+    Properties:
+      ApiId: !Ref ParkvicRestApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${PaymentIntentLambdaFunction.Arn}/invocations"
+      IntegrationMethod: POST
+      PayloadFormatVersion: 2.0
+      TimeoutInMillis: 30000
+  PostSubcribeWebhookLambdaFunctionIntegration:
+    Type: 'AWS::ApiGatewayV2::Integration'
+    Properties:
+      ApiId: !Ref ParkvicRestApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${PostSubcribeWebhookLambdaFunction.Arn}/invocations"
+      IntegrationMethod: POST
+      PayloadFormatVersion: 2.0
+      TimeoutInMillis: 30000
+  PresignUrlLambdaFunctionIntegration:
+    Type: 'AWS::ApiGatewayV2::Integration'
+    Properties:
+      ApiId: !Ref ParkvicRestApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${PresignUrlLambdaFunction.Arn}/invocations"
+      IntegrationMethod: POST
+      PayloadFormatVersion: 2.0
+      TimeoutInMillis: 30000
+  RefreshLambdaFunctionIntegration:
+    Type: 'AWS::ApiGatewayV2::Integration'
+    Properties:
+      ApiId: !Ref ParkvicRestApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RefreshLambdaFunction.Arn}/invocations"
+      IntegrationMethod: POST
+      PayloadFormatVersion: 2.0
+      TimeoutInMillis: 30000
+  ImageProcessLambdaFunctionIntegration:
+    Type: 'AWS::ApiGatewayV2::Integration'
+    Properties:
+      ApiId: !Ref ParkvicRestApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ParkvicApiV2LambdaFunction.Arn}/invocations"
+      IntegrationMethod: POST
+      PayloadFormatVersion: 2.0
+      TimeoutInMillis: 30000
+
+  # Route
+  ExchangeCodeForTokenLambdaFunctionRoute:
+    Type: 'AWS::ApiGatewayV2::Route'
+    Properties:
+      ApiId: !Ref ParkvicRestApi
+      RouteKey: "POST /api/v1/exchangecodefortoken"
+      Target: !Sub "integrations/${ExchangeCodeForTokenLambdaFunctionIntegration}"
+  AuthorizerRoute:
+    Type: 'AWS::ApiGatewayV2::Route'
+    Properties:
+      ApiId: !Ref ParkvicRestApi
+      RouteKey: "POST /api/v1/authorizer"
+      AuthorizationType: None
+      Target: !Sub "integrations/${AuthorizerIntegration}"
+  LogoutLambdaFunctionRoute:
+    Type: 'AWS::ApiGatewayV2::Route'
+    Properties:
+      ApiId: !Ref ParkvicRestApi
+      RouteKey: "POST /logout"
+      Target: !Sub "integrations/${LogoutLambdaFunctionIntegration}"
+  PaymentIntentLambdaFunctionRoute:
+    Type: 'AWS::ApiGatewayV2::Route'
+    Properties:
+      ApiId: !Ref ParkvicRestApi
+      RouteKey: "POST /api/v1/payment-intent"
+      Target: !Sub "integrations/${PaymentIntentLambdaFunctionIntegration}"
+  PostSubcribeWebhookLambdaFunctionRoute:
+    Type: 'AWS::ApiGatewayV2::Route'
+    Properties:
+      ApiId: !Ref ParkvicRestApi
+      RouteKey: "POST /api/v1/stripe-web-hook"
+      Target: !Sub "integrations/${PostSubcribeWebhookLambdaFunctionIntegration}"
+  PresignUrlLambdaFunctionRoute:
+    Type: 'AWS::ApiGatewayV2::Route'
+    Properties:
+      ApiId: !Ref ParkvicRestApi
+      RouteKey: "POST /api/v1/presignurl"
+      Target: !Sub "integrations/${PresignUrlLambdaFunctionIntegration}"
+  RefreshLambdaFunctionRoute:
+    Type: 'AWS::ApiGatewayV2::Route'
+    Properties:
+      ApiId: !Ref ParkvicRestApi
+      RouteKey: "POST /api/v1/refreshtoken"
+      Target: !Sub "integrations/${RefreshLambdaFunctionIntegration}"
+  ImageProcessRoute:
+    Type: 'AWS::ApiGatewayV2::Route'
+    Properties:
+      ApiId: !Ref ParkvicRestApi
+      RouteKey: "POST /api/v1/imageprocess"
+      AuthorizationType: CUSTOM
+      AuthorizerId: !Ref LambdaAuthorizer
+      Target: !Sub "integrations/${ImageProcessLambdaFunctionIntegration}"
+  #  Dynamo Db table
+  ParkvicUserTable:
+    Type: 'AWS::DynamoDB::Table'
+    Properties:
+      TableName: 'ParkvicUser'
+      AttributeDefinitions:
+        - AttributeName: 'email'
+          AttributeType: 'S'
+      KeySchema:
+        - AttributeName: 'email'
+          KeyType: 'HASH'
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+      DeletionProtectionEnabled: false
+      TableClass: 'STANDARD'
+
+  UnauthenticatedUserTable:
+    Type: 'AWS::DynamoDB::Table'
+    Properties:
+      TableName: 'ParkvicUnauthenticatedUser'
+      AttributeDefinitions:
+        - AttributeName: 'ip'
+          AttributeType: 'S'
+      KeySchema:
+        - AttributeName: 'ip'
+          KeyType: 'HASH'
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+      DeletionProtectionEnabled: false
+      TableClass: 'STANDARD' 
+
+  #Stage
+  StageDev:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref ParkvicRestApi
+      AutoDeploy: false
+      Description: "dev stage"
+      StageName: deploy
+
+  # deployment
+  Deployment:
+    Type: 'AWS::ApiGatewayV2::Deployment'
+    DependsOn: 
+      - ExchangeCodeForTokenLambdaFunctionRoute
+      - AuthorizerRoute
+      - LogoutLambdaFunctionRoute
+      - PaymentIntentLambdaFunctionRoute
+      - PostSubcribeWebhookLambdaFunctionRoute
+      - PresignUrlLambdaFunctionRoute
+      - RefreshLambdaFunctionRoute
+      - ImageProcessRoute
+      # - DomainNameMapping
+    Properties:
+      Description: set up deployment
+      ApiId: !Ref ParkvicRestApi
+      StageName: deploy
+

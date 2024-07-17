@@ -3,6 +3,7 @@ const client_secret = process.env.CLIENT_SECRET;
 const tokenEndpoint = process.env.TOKEN_ENDPOINT;
 const credentials = btoa(`${client_id}:${client_secret}`);
 const querystring = require('querystring');
+import {host_origin} from '../../src/config.js';
 exports.handler = async (event, context) => {
     // get cookies from header of event with name refresh_token
     const header = event.headers
@@ -17,7 +18,7 @@ exports.handler = async (event, context) => {
         }
     }
     const requestOrigin = header.origin;
-    const acceptedOrigin = ["http://localhost:3000", "https://localhost:3000", "https://diqvd5r88q5zx.cloudfront.net", "https://parkvic-app.harry-playground.click" ]
+    const acceptedOrigin = ["http://localhost:3000", "https://localhost:3000", "https://diqvd5r88q5zx.cloudfront.net", "https://parkvic-app.harry-playground.click", host_origin ]
     if (!acceptedOrigin.includes(requestOrigin)) {
         return {
             statusCode: 400,
@@ -67,7 +68,7 @@ exports.handler = async (event, context) => {
       headers: {
         Location: "/",
         "set-cookie": `access_token=${token_response.access_token}; Secure; Path=/; Max-Age=${token_response.expires_in}; SameSite=None;Domain=${getApexDomain(requestOrigin)}`,
-        "Access-Control-Allow-Origin": "https://parkvic-app.harry-playground.click",
+        "Access-Control-Allow-Origin": host_origin,
         "Access-Control-Allow-Credentials": "true",
       },
       body: JSON.stringify({ access_token: token_response.access_token }),

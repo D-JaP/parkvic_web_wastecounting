@@ -1,5 +1,6 @@
 const stripe = require('stripe')(process.env.STRIPE_SECRET);
 const axios = require('axios');
+const { host_origin } = require('../../src/config');
 const userinfo_url = process.env.USER_ENDPOINT;
 exports.handler = async (event, context, callback) => {
     try {
@@ -31,7 +32,7 @@ exports.handler = async (event, context, callback) => {
             statusCode: 200,
             headers: {
                 'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': 'https://parkvic-app.harry-playground.click'
+                'Access-Control-Allow-Origin': host_origin
             },
 
             body: JSON.stringify({

@@ -12,7 +12,7 @@ import LoadingEffect from "./LoadingEffect.tsx";
 import Summary from "./Summary.tsx";
 import * as XLSX from "xlsx";
 import ErrMsgBox from "./ErrMsgBox.tsx";
-import s3Upload from "./s3UpLoad.tsx";
+import s3Upload from "./s3Upload.tsx";
 import {core_api_path} from "../../config.js";
 import Cookies from "js-cookie";
 import { getAccessToken } from "../../Callback/GetAccessToken.tsx";

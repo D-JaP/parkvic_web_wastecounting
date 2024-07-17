@@ -1,9 +1,12 @@
+// Generate policy to allow or deny access to api endpoint
+
 const {CognitoJwtVerifier} =require('aws-jwt-verify');
 const { DynamoDBClient } =require("@aws-sdk/client-dynamodb");
 const { DynamoDBDocumentClient, GetCommand, UpdateCommand, PutCommand } =require( "@aws-sdk/lib-dynamodb");
 const axios = require('axios');
-
 const tokenEndpoint = process.env.TOKEN_ENDPOINT;
+const userTableName = process.env.USER_TABLE_NAME;
+const unauthenticatedUserTableName = process.env.UNAUTHENTICATED_USER_TABLE_NAME;
 const client = new DynamoDBClient({region: "ap-southeast-2"});
 const docClient = DynamoDBDocumentClient.from(client);
 const {_200Callback ,_401Callback, _500Callback} = require('./response.js');
@@ -102,36 +105,48 @@ exports.handler = async function(event, context, callback) {
         // get ip address from event 
         var ip;
         try {
-            ip = event.requestContext.identity.sourceIp;
-            console.log("ip address found",ip);
+            if ("identity" in event.requestContext){
+                ip = event.requestContext.identity.sourceIp;
+                console.log("ip address found",ip);
+            }
+            else if ("http" in event.requestContext){
+                ip = event.requestContext.http.sourceIp;
+                console.log("ip address found",ip);
+            }
+            else {
+                throw new Error("ip address not found")
+            }            ;
         }
         catch(err){
-            console.log("ip address not found");
+            console.error("ip address not found");
+            console.error(ip);
             callback(null, _500Callback("ip address not found. Check if request is from api gateway test mode."));
         }
         // check if ip present in dynamoDb
         
         const params = {
-            TableName: "unauthenticated_user",
+            TableName: unauthenticatedUserTableName,
             Key: {
                 "ip": ip
             }
         }
-        const data = await docClient.send(new GetCommand( )).catch((err) => {
-            console.log("the ip provide not seen in db",err);
+        console.log(unauthenticatedUserTableName);
+        const data = await docClient.send(new GetCommand(params)).catch((err) => {
+            console.log("the ip provide not seen in db, finished check without ip present. Error: ",err);
             return null;
         });
         // if not present, create new record, set limit per day
-        console.log(data);
-        if (!data){
+        console.log("ip found in data table:", data);
+        if (!data.Item){
             const put_params = {
-                TableName: "unauthenticated_user",
+                TableName: unauthenticatedUserTableName,
                 Item: {
                     ip: ip,
                     credit: process.env.CREDIT_LIMIT,
                     last_update: new Date().getTime()
                 }
             };
+            console.log("creating new ip record in dynammo table");
             await docClient.send(new PutCommand(put_params)).then(() => {
                 callback(null, generateAllow('user', event.methodArn));
             })
@@ -142,14 +157,14 @@ exports.handler = async function(event, context, callback) {
         }
 
         const new_data = await docClient.send(new GetCommand(params)).then(async ()=> {
-            if(await isUserHaveCredit(ip, "ip", "unauthenticated_user")){
+            if(await isUserHaveCredit(ip, "ip", unauthenticatedUserTableName)){
                 callback(null, generateAllow('user', event.methodArn));
             }
             else {
                 callback(null, generateDeny('user', event.methodArn, "User does not have enough credit"));
             }
         }).catch((err) => {
-            console.log("the ip provide not seen in db",err);
+            console.log("the ip provide not seen in db, ",err);
             return null;
         });
 
@@ -189,7 +204,9 @@ var generatePolicy = function(principalId, effect, resource, messages) {
     authResponse.context = {
         "message" : messages
     };
-    return authResponse;
+    console.log("Policy generated: ", JSON.stringify(authResponse))
+    // convert authResponse to json string
+    return authResponse
 }
      
 var generateAllow = function(principalId, resource, messages = "") {
@@ -206,7 +223,7 @@ var generateDeny = function(principalId, resource, messages = "") {
 async function checkIfPremiumUser(email) {
     // check if user is premium
     const params = {
-        TableName: "parkvic",
+        TableName: userTableName,
         Key: {
             "email": email
         }
@@ -222,7 +239,7 @@ async function checkIfPremiumUser(email) {
             console.log("user not found");
             console.log("updating new user to dynamoDb");
             const put_params = {
-                TableName: "parkvic",
+                TableName: userTableName,
                 Item: {
                     email: email,
                     premium_user: false,
@@ -260,7 +277,7 @@ async function checkIfPremiumUser(email) {
     }
 }
 
-async function isUserHaveCredit(input_querystring , mode = "email", tablename = "parkvic") {
+async function isUserHaveCredit(input_querystring , mode = "email", tablename = userTableName) {
     // check if user is premium from
     // -email
     // -ip

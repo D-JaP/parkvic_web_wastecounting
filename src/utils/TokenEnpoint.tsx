@@ -1,4 +1,4 @@
-const getTokenUrl = "https://api.parkvic.harry-playground.click/api/v1/exchangecodefortoken";
+import { getTokenUrl } from "../config";
 
 export const getTokenFromCode  = async (code:string):Promise<{
   access_token: string;

@@ -1,0 +1,43 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  MyLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      PackageType: Image
+      Code:
+        ImageUri: !Sub "681503573350.dkr.ecr.ap-southeast-2.amazonaws.com/wastecounter_parkvic_api_exchange_code_for_token:latest"
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Timeout: 300
+      MemorySize: 512
+      Environment:
+        Variables:
+          CLIENT_ID: 572aocggegc3gkbeuba7mr16qv
+          CLIENT_SECRET: 9e5g9og9kiu2fds03cp0lf7g2m9egj4am1p6p5ceu753aifn93p
+          TOKEN_ENDPOINT: https://parkvic.auth.ap-southeast-2.amazoncognito.com/oauth2/token/
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaExecutionPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: '*'
+
+Outputs:
+  LambdaFunctionArn:
+    Value: !GetAtt MyLambdaFunction.Arn
+    Description: ARN of the newly created Lambda function

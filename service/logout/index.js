@@ -1,4 +1,4 @@
-// lambda server api for exchange code for token
+// lambda server api for logout
 // import axios
 
 exports.handler = async (event, context) => {

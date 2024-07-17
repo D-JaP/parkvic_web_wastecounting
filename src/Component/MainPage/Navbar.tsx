@@ -4,10 +4,12 @@ import { Link } from "react-router-dom";
 import AuthContext from "../../Context/AuthContext";
 import UserInfoCallback from "../../Callback/UserInfoCallback";
 import Cookies from "js-cookie";
+import {client_id, logoutUrl} from "../../config";
+
 function Navbar() {
   let loginUrl: string;
   let signupUrl: string;
-  const clientId = "572aocggegc3gkbeuba7mr16qv"
+  const clientId = client_id
   // local host testing
   if (window.location.hostname === "localhost") {
     loginUrl =
@@ -53,7 +55,7 @@ function Navbar() {
   const logout = async () => {
       // invalidate cookies
       Cookies.remove("access_token");
-      await fetch("https://api.parkvic.harry-playground.click/logout", {
+      await fetch(logoutUrl, {
         method: "POST",
         credentials: "include",
         headers: {

@@ -11,7 +11,7 @@ import {
 } from "@stripe/react-stripe-js";
 
 import './CheckoutForm.scss'
-
+import {host_origin} from "../../config"
 const CheckoutForm = ({clientSecret}:{clientSecret:string}) => {
   const stripe = useStripe();
   const elements = useElements();
@@ -31,7 +31,7 @@ const CheckoutForm = ({clientSecret}:{clientSecret:string}) => {
         elements,
         clientSecret,
         confirmParams: {
-          return_url: 'https://parkvic-app.harry-playground.click',
+          return_url: host_origin,
         }
       });
       if (error){
